@@ -139,8 +139,8 @@ cython_debug/
 
 # input data and models
 input/
-models/
 .vscode/
+data/
 
 # data files
 *.csv
