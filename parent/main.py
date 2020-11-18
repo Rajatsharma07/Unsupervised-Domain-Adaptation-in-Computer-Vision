@@ -5,7 +5,7 @@ from src.target_model import target_model
 from src.model_dispatcher import merged_network, callbacks_fn, Custom_Eval
 import tensorflow as tf
 from tensorflow import keras
-import src.plot as plots
+import src.utils as utils
 import src.evals as evals
 import os
 import argparse
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     )
 
     """ Evaluation"""
-    plots.loss_accuracy_plots(
+    utils.loss_accuracy_plots(
         hist.history["accuracy"],
         hist.history["val_accuracy"],
         hist.history["loss"],
