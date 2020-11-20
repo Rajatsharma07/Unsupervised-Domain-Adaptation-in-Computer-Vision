@@ -57,7 +57,9 @@ def merged_network(
     x = layers.BatchNormalization(name="bn_top2")(x)
     x = layers.Activation("relu")(x)
     x = layers.Dropout(0.3)(x)
-    prediction = layers.Dense(num_classes, kernel_initializer=cn.initializer)(x)
+    prediction = layers.Dense(
+        num_classes, kernel_initializer=cn.initializer, activation="softmax"
+    )(x)
 
     classifier_model = models.Model(classifier_input, prediction, name="Classifier")
     classifier_model.summary()
@@ -69,12 +71,13 @@ def merged_network(
     source_scores = tf.reshape(source_model.output, [-1, feature_extractor_shape])
     target_scores = tf.reshape(target_model.output, [-1, feature_extractor_shape])
 
-    additional_loss(
+    coral_loss = additional_loss(
         model=merged_model,
         source_output=source_scores,
         target_output=target_scores,
         percent_lambda=percent,
     )
+    merged_model.add_metric(coral_loss, name="coral_loss", aggregation="mean")
 
     return merged_model
 
@@ -84,12 +87,14 @@ class Custom_Eval(tf.keras.callbacks.Callback):
         super().__init__()
         self.validation_data = val_data
         self.loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-        self.acc_metric = keras.metrics.SparseCategoricalAccuracy(name="my_accuracy")
+        self.acc_metric = keras.metrics.SparseCategoricalAccuracy(
+            name="custom_accuracy_metric"
+        )
 
     def on_epoch_end(self, epoch, logs):
         # create the new nodes for each layer in the path
-        x = self.model.layers[3](self.validation_data[0])
-        y_pred = self.model.layers[6](x)
+        x = self.model.layers[3](self.validation_data[0], training=False)
+        y_pred = self.model.layers[6](x, training=False)
 
         # ip1 = keras.Input(shape=(32,32,3))
         # # ip1 = self.model.layers[3].input_shape[1:]
@@ -106,10 +111,16 @@ class Custom_Eval(tf.keras.callbacks.Callback):
 
         # loss, acc = mdl.evaluate(self.validation_data[0], self.validation_data[1], verbose=0)
         loss = self.loss_fn(self.validation_data[1], y_pred)
-        logs["my_accuracy"] = self.acc_metric.result().numpy()
-        logs["my_loss"] = loss.numpy()
-        print("my_accuracy: %.4f" % (float(self.acc_metric.result()),))
-        print(f"my_loss: {loss}")
+        logs["custom_accuracy"] = self.acc_metric.result().numpy()
+        logs["custom_loss"] = loss.numpy()
+        tf.summary.scalar("Custom Evaluation loss", data=loss.numpy(), step=epoch)
+        tf.summary.scalar(
+            "Custom Evaluation Accuracy",
+            data=self.acc_metric.result().numpy(),
+            step=epoch,
+        )
+        print("Custom_accuracy: %.4f" % (float(self.acc_metric.result()),))
+        print(f"Custom_loss: {loss}, Epoch: {epoch}")
         self.acc_metric.reset_states()
 
 
@@ -138,6 +149,9 @@ def callbacks_fn(combination, source_model, sample_seed):
     tb_logdir = os.path.join(
         tb_logdir, datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     )
+
+    file_writer = tf.summary.create_file_writer(tb_logdir + "/custom_evaluation")
+    file_writer.set_as_default()
     tensorboard_callback = tf.keras.callbacks.TensorBoard(tb_logdir, histogram_freq=1)
     print(f"\nTensorboard logs path: {tb_logdir}\n")
 

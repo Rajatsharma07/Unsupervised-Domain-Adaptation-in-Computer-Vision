@@ -18,6 +18,7 @@ def coral_loss(model, source_output, target_output, percent_lambda):
     loss = tf.reduce_sum(tf.multiply((xc - xct), (xc - xct)))
     loss = loss / (4 * d * d)
     model.add_loss(percent_lambda * loss)
+    return loss
 
 
 def kl_divergence(model, source_output, target_output, percent_lambda):

@@ -2,22 +2,21 @@ import pickle
 import tensorflow as tf
 import numpy as np
 import pandas as pd
-import config as cn
 
-train_dir = "data/mnist_images_csv/"
-df_train = pd.read_csv(train_dir + "train.csv")
+# train_dir = "data/mnist_images_csv/"
+# df_train = pd.read_csv(train_dir + "train.csv")
 
-test_dir = "data/mnist_images_csv/"
-df_test = pd.read_csv(test_dir + "test.csv")
+# test_dir = "data/mnist_images_csv/"
+# df_test = pd.read_csv(test_dir + "test.csv")
 
-file_paths_train = df_train["file_name"].values
-labels_train = df_train["label"].values
+# file_paths_train = df_train["file_name"].values
+# labels_train = df_train["label"].values
 
-file_paths_test = df_test["file_name"].values
-labels_test = df_test["label"].values
+# file_paths_test = df_test["file_name"].values
+# labels_test = df_test["label"].values
 
-ds_train = tf.data.Dataset.from_tensor_slices((file_paths_train, labels_train))
-ds_test = tf.data.Dataset.from_tensor_slices((file_paths_test, labels_test))
+# ds_train = tf.data.Dataset.from_tensor_slices((file_paths_train, labels_train))
+# ds_test = tf.data.Dataset.from_tensor_slices((file_paths_test, labels_test))
 
 
 def read_image(image_file, label, directory, channels=3):
@@ -48,29 +47,29 @@ def augment(image, label, size=32):
     return image, label
 
 
-AUTOTUNE = tf.data.experimental.AUTOTUNE
-BATCH_SIZE = cn.BATCH_SIZE
+# AUTOTUNE = tf.data.experimental.AUTOTUNE
+# BATCH_SIZE = cn.BATCH_SIZE
 
-# Read the data
-ds_train = ds_train.map(
-    read_image(directory=train_dir, channels=1), num_parallel_calls=AUTOTUNE
-)
+# # Read the data
+# ds_train = ds_train.map(
+#     read_image(directory=train_dir, channels=1), num_parallel_calls=AUTOTUNE
+# )
 
-# Setup for train dataset
-ds_train = ds_train.map(normalize_img, num_parallel_calls=AUTOTUNE)
-ds_train = ds_train.cache()
-# ds_train = ds_train.shuffle(ds_info.splits["train"].num_examples)
-ds_train = ds_train.map(augment, num_parallel_calls=AUTOTUNE)
-ds_train = ds_train.batch(BATCH_SIZE)
-ds_train = ds_train.prefetch(AUTOTUNE)
+# # Setup for train dataset
+# ds_train = ds_train.map(normalize_img, num_parallel_calls=AUTOTUNE)
+# ds_train = ds_train.cache()
+# # ds_train = ds_train.shuffle(ds_info.splits["train"].num_examples)
+# ds_train = ds_train.map(augment, num_parallel_calls=AUTOTUNE)
+# ds_train = ds_train.batch(BATCH_SIZE)
+# ds_train = ds_train.prefetch(AUTOTUNE)
 
-# Setup for test Dataset
-ds_test = ds_train.map(
-    read_image(directory=test_dir, channels=3), num_parallel_calls=AUTOTUNE
-)
-ds_test = ds_train.map(normalize_img, num_parallel_calls=AUTOTUNE)
-ds_test = ds_train.batch(BATCH_SIZE)
-ds_test = ds_train.prefetch(AUTOTUNE)
+# # Setup for test Dataset
+# ds_test = ds_train.map(
+#     read_image(directory=test_dir, channels=3), num_parallel_calls=AUTOTUNE
+# )
+# ds_test = ds_train.map(normalize_img, num_parallel_calls=AUTOTUNE)
+# ds_test = ds_train.batch(BATCH_SIZE)
+# ds_test = ds_train.prefetch(AUTOTUNE)
 
 
 def scale_normalize(dataset_train, dataset_test):
