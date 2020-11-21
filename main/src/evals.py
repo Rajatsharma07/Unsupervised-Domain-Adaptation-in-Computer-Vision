@@ -14,7 +14,7 @@ def test_accuracy(model, test_set, test_labels, batch=None, verbose=2):
     """[This method gives test_accuracy as on output]
 
     Arguments:
-        model {[type]} -- [description]
+        model {[keras.Model]} -- [Keras model]
         test_set {[type]} -- [description]
         test_labels {[type]} -- [description]
 

@@ -153,11 +153,3 @@ data/
 .flake8
 
 # My Local Files
-approach1_1.py
-approach1_2.py
-data_prep.ipynb
-STL_ds.py
-stl10_input.py
-TransferLearning-STL10.ipynb
-Baseline-2.ipynb
-test_2.py

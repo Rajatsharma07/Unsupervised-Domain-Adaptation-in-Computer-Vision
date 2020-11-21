@@ -125,18 +125,24 @@ class Custom_Eval(tf.keras.callbacks.Callback):
 
 
 def callbacks_fn(combination, source_model, sample_seed):
+
     my_dir = combination + "_" + source_model + "_" + sample_seed
-    if os.path.exists(cn.MODEL_PATH):
-        checkpoint_path = os.path.join(cn.MODEL_PATH, my_dir)
-        os.makedirs(checkpoint_path)
-        checkpoint_path = os.path.join(
-            checkpoint_path,
-            "weights.{epoch:02d}-{val_loss:.2f}.hdf5",
-        )
+    print(f"Created directory: {my_dir}")
+
+    assert os.path.exists(cn.MODEL_PATH), "MODEL_PATH doesn't exist"
+    checkpoint_path = os.path.join(cn.MODEL_PATH, my_dir)
+    os.makedirs(checkpoint_path)
+    assert os.path.exists(checkpoint_path), "checkpoint_path doesn't exist"
+    checkpoint_path = os.path.join(
+        checkpoint_path,
+        "weights.{epoch:02d}-{val_loss:.2f}.hdf5",
+    )
     print(f"\nModel Checkpoint path: {checkpoint_path}\n")
 
+    assert os.path.exists(cn.LOGS_DIR), "LOGS_DIR doesn't exist"
     csv_logger = os.path.join(cn.LOGS_DIR, my_dir)
     os.makedirs(csv_logger)
+    assert os.path.exists(csv_logger), "csv_logger doesn't exist"
     print(f"\nModel CSV logs path: {csv_logger}/logs.csv\n")
     csv_logger = CSVLogger(
         os.path.join(csv_logger, "logs.csv"),
@@ -144,8 +150,10 @@ def callbacks_fn(combination, source_model, sample_seed):
         separator=";",
     )
 
+    assert os.path.exists(cn.TENSORBOARD_DIR), "TENSORBOARD_DIR doesn't exist"
     tb_logdir = os.path.join(cn.TENSORBOARD_DIR, my_dir)
     os.makedirs(tb_logdir)
+    assert os.path.exists(tb_logdir), "tb_logdir doesn't exist"
     tb_logdir = os.path.join(
         tb_logdir, datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     )

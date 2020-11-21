@@ -17,13 +17,41 @@ physical_devices = tf.config.list_physical_devices("GPU")
 # tf.config.experimental.set_memory_growth(physical_devices[1], True)
 
 
-if __name__ == "__main__":
-
+def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--combination", type=str)
-    parser.add_argument("--source_model", type=str)
-    parser.add_argument("--sample_seed", type=int)
+    parser.add_argument(
+        "cm",
+        "--combination",
+        type=str,
+        required=True,
+        help="pass dataset combination string",
+    )
+    parser.add_argument(
+        "sm",
+        "--source_model",
+        type=str,
+        required=True,
+        help="pass source model's method name",
+    )
+    parser.add_argument(
+        "ss",
+        "--sample_seed",
+        type=int,
+        required=True,
+        help="pass the seed value for shuffling target dataset",
+    )
     args = parser.parse_args()
+    params = vars(args)
+    print(params)
+
+    assert params["mode"], "mode is required. train, test or eval option"
+    assert params["mode"] in [
+        "train",
+        "test",
+        "eval",
+    ], "The mode must be train , test or eval"
+    assert os.path.exists(params["data_dir"]), "data_dir doesn't exist"
+    assert os.path.isfile(params["vocab_path"]), "vocab_path doesn't exist"
 
     """ Fetch Source & Target Dataset"""
     mnistx_train_or, mnisty_train_or, mnistx_test_or, mnisty_test_or = get_mnist()
@@ -113,3 +141,7 @@ if __name__ == "__main__":
     evals.test_accuracy(model, [mnistmx_test, mnistmx_test], mnisty_test_or)
 
     evals.test_accuracy(model, [mnistmx_test, mnistmx_test], mnisty_test_or)
+
+
+if __name__ == "__main__":
+    main()
