@@ -44,14 +44,14 @@ def main():
     params = vars(args)
     print(params)
 
-    assert params["mode"], "mode is required. train, test or eval option"
-    assert params["mode"] in [
-        "train",
-        "test",
-        "eval",
-    ], "The mode must be train , test or eval"
-    assert os.path.exists(params["data_dir"]), "data_dir doesn't exist"
-    assert os.path.isfile(params["vocab_path"]), "vocab_path doesn't exist"
+    # assert params["mode"], "mode is required. train, test or eval option"
+    # assert params["mode"] in [
+    #     "train",
+    #     "test",
+    #     "eval",
+    # ], "The mode must be train , test or eval"
+    # assert os.path.exists(params["data_dir"]), "data_dir doesn't exist"
+    # assert os.path.isfile(params["vocab_path"]), "vocab_path doesn't exist"
 
     """ Fetch Source & Target Dataset"""
     mnistx_train_or, mnisty_train_or, mnistx_test_or, mnisty_test_or = get_mnist()
