@@ -2,7 +2,7 @@ from src.preprocessing import get_mnist, get_mnist_m, shuffle_dataset
 import config as cn
 from src.source_model import source_resnet
 from src.target_model import target_model
-from src.model_dispatcher import merged_network, callbacks_fn, Custom_Eval
+from src.combined_model import merged_network, callbacks_fn, Custom_Eval
 import tensorflow as tf
 from tensorflow import keras
 import src.utils as utils
@@ -10,6 +10,7 @@ import src.eval_helper as evals
 import os
 import argparse
 from tensorboard.plugins.hparams import api as hp
+from train_test_eval import train
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 physical_devices = tf.config.list_physical_devices("GPU")
@@ -20,25 +21,50 @@ physical_devices = tf.config.list_physical_devices("GPU")
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "cm",
         "--combination",
         type=str,
         required=True,
         help="pass dataset combination string",
     )
     parser.add_argument(
-        "sm",
         "--source_model",
         type=str,
         required=True,
         help="pass source model's method name",
     )
     parser.add_argument(
-        "ss",
         "--sample_seed",
         type=int,
         required=True,
         help="pass the seed value for shuffling target dataset",
+    )
+
+    parser.add_argument("--batch_size", default=64, help="batch size", type=int)
+
+    parser.add_argument(
+        "--learning_rate", default=0.001, help="Learning rate", type=float
+    )
+
+    parser.add_argument(
+        "--mode", help="training, eval or test options", default="", type=str
+    )
+
+    parser.add_argument(
+        "--checkpoint_dir", help="Checkpoint directory", default="", type=str
+    )
+    parser.add_argument(
+        "--test_save_dir",
+        help="Directory in which we store the results",
+        default="",
+        type=str,
+    )
+    parser.add_argument("--data_dir", help="Data Folder", default="", type=str)
+
+    parser.add_argument(
+        "--log_file",
+        help="File in which to redirect console outputs",
+        default="",
+        type=str,
     )
     args = parser.parse_args()
     params = vars(args)
@@ -53,62 +79,6 @@ def main():
     # mnistx_test, mnisty_test = shuffle_dataset(mnistx_test, mnisty_test, seed_val)
 
     mnistmx_train, mnistmx_test = get_mnist_m(cn.MNIST_M_PATH)
-
-    source_mdl = None
-    source_mdl = source_resnet((32, 32, 3))
-
-    # Call Target model
-    target_mdl = None
-    target_mdl = target_model(input_shape=(32, 32, 3))
-
-    # Create Combined model
-    model = None
-    model = merged_network(
-        (32, 32, 3), source_model=source_mdl, target_model=target_mdl, percent=0.7
-    )
-
-    """ Compilation and Fit"""
-    model.compile(
-        optimizer=keras.optimizers.Adam(learning_rate=0.001),
-        loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-        metrics=["accuracy"],
-    )
-
-    # Create callbacks
-    (
-        csv_logger,
-        cp_callback,
-        tensorboard_callback,
-        reduce_lr_callback,
-        logdir,
-    ) = callbacks_fn(
-        combination=args.combination,
-        source_model=args.source_model,
-        sample_seed=args.sample_seed,
-    )
-
-    # Custom Evauation Callback
-    custom_eval = Custom_Eval((mnistmx_test, mnisty_test_or))
-
-    hist = None
-    hist = model.fit(
-        x=[mnistx_train, mnistmx_train],
-        y=mnisty_train,
-        validation_data=(
-            [mnistmx_train, mnistmx_train],
-            mnisty_train_or,
-        ),
-        epochs=cn.EPOCHS,
-        verbose=1,
-        callbacks=[
-            cp_callback,
-            tensorboard_callback,
-            reduce_lr_callback,
-            custom_eval,
-            csv_logger,
-        ],
-        batch_size=cn.BATCH_SIZE,
-    )
 
     """ Evaluation"""
     utils.loss_accuracy_plots(
