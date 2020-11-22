@@ -6,7 +6,7 @@ from src.model_dispatcher import merged_network, callbacks_fn, Custom_Eval
 import tensorflow as tf
 from tensorflow import keras
 import src.utils as utils
-import src.evals as evals
+import src.eval_helper as evals
 import os
 import argparse
 from tensorboard.plugins.hparams import api as hp
@@ -44,15 +44,6 @@ def main():
     params = vars(args)
     print(params)
 
-    # assert params["mode"], "mode is required. train, test or eval option"
-    # assert params["mode"] in [
-    #     "train",
-    #     "test",
-    #     "eval",
-    # ], "The mode must be train , test or eval"
-    # assert os.path.exists(params["data_dir"]), "data_dir doesn't exist"
-    # assert os.path.isfile(params["vocab_path"]), "vocab_path doesn't exist"
-
     """ Fetch Source & Target Dataset"""
     mnistx_train_or, mnisty_train_or, mnistx_test_or, mnisty_test_or = get_mnist()
 
@@ -63,15 +54,6 @@ def main():
 
     mnistmx_train, mnistmx_test = get_mnist_m(cn.MNIST_M_PATH)
 
-    # mnistmx_train, mnistmy_train = shuffle_dataset(
-    #     mnistmx_train, mnisty_train, cn.seed_val
-    # )
-
-    # strategy = tf.distribute.MirroredStrategy()
-    # print("Number of devices: {}".format(strategy.num_replicas_in_sync))
-    # # Open a strategy scope.
-    # with strategy.scope():
-    # Call Source model
     source_mdl = None
     source_mdl = source_resnet((32, 32, 3))
 
@@ -105,6 +87,7 @@ def main():
         sample_seed=args.sample_seed,
     )
 
+    # Custom Evauation Callback
     custom_eval = Custom_Eval((mnistmx_test, mnisty_test_or))
 
     hist = None

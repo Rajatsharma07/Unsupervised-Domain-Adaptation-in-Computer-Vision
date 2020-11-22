@@ -92,24 +92,8 @@ class Custom_Eval(tf.keras.callbacks.Callback):
         )
 
     def on_epoch_end(self, epoch, logs):
-        # create the new nodes for each layer in the path
         x = self.model.layers[3](self.validation_data[0], training=False)
         y_pred = self.model.layers[6](x, training=False)
-
-        # ip1 = keras.Input(shape=(32,32,3))
-        # # ip1 = self.model.layers[3].input_shape[1:]
-        # op1 = self.model.layers[3](ip1)
-        # # create the model
-        # op_mdl1 = Model(ip1, op1)
-        # o1 = op_mdl1(self.validation_data[0])
-        # print(o1[0])
-
-        # create the new nodes for each layer in the path
-        # ip2 = keras.Input(shape=(1,1,256))
-        # op2 = self.model.layers[6](ip2)
-        # op_mdl2 = Model(ip2, op2)
-
-        # loss, acc = mdl.evaluate(self.validation_data[0], self.validation_data[1], verbose=0)
         loss = self.loss_fn(self.validation_data[1], y_pred)
         logs["custom_accuracy"] = self.acc_metric.result().numpy()
         logs["custom_loss"] = loss.numpy()
@@ -135,7 +119,7 @@ def callbacks_fn(combination, source_model, sample_seed):
     assert os.path.exists(checkpoint_path), "checkpoint_path doesn't exist"
     checkpoint_path = os.path.join(
         checkpoint_path,
-        "weights.{epoch:02d}-{val_loss:.2f}.hdf5",
+        "weights.{epoch:02d}-{val_accuracy:.2f}.hdf5",
     )
     print(f"\nModel Checkpoint path: {checkpoint_path}\n")
 
@@ -143,16 +127,16 @@ def callbacks_fn(combination, source_model, sample_seed):
     csv_logger = os.path.join(cn.LOGS_DIR, my_dir)
     os.makedirs(csv_logger)
     assert os.path.exists(csv_logger), "csv_logger doesn't exist"
+    tb_logdir = csv_logger
     print(f"\nModel CSV logs path: {csv_logger}/logs.csv\n")
     csv_logger = CSVLogger(
-        os.path.join(csv_logger, "logs.csv"),
+        os.path.join(
+            csv_logger, datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".csv"
+        ),
         append=True,
         separator=";",
     )
 
-    assert os.path.exists(cn.TENSORBOARD_DIR), "TENSORBOARD_DIR doesn't exist"
-    tb_logdir = os.path.join(cn.TENSORBOARD_DIR, my_dir)
-    os.makedirs(tb_logdir)
     assert os.path.exists(tb_logdir), "tb_logdir doesn't exist"
     tb_logdir = os.path.join(
         tb_logdir, datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -160,6 +144,7 @@ def callbacks_fn(combination, source_model, sample_seed):
 
     file_writer = tf.summary.create_file_writer(tb_logdir + "/custom_evaluation")
     file_writer.set_as_default()
+
     tensorboard_callback = tf.keras.callbacks.TensorBoard(tb_logdir, histogram_freq=1)
     print(f"\nTensorboard logs path: {tb_logdir}\n")
 

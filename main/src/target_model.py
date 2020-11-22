@@ -123,13 +123,6 @@ def target_model(input_shape=(64, 64, 3)):
     x = layers.Activation("relu")(x)
     x = layers.MaxPooling2D()(x)
     out2 = layers.Dropout(0.4)(x)
+    model = models.Model(inputs=in_2, outputs=out2, name="Target_Model")
 
-    # out2 = GlobalAveragePooling2D()(out2)
-
-    model = models.Model(inputs=in_2, outputs=out2, name="My_VGG_Model")
-    # model.compile(
-    #     optimizer=keras.optimizers.Adam(learning_rate=0.0001),
-    #     loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    #     metrics=["accuracy"],
-    # )
     return model
