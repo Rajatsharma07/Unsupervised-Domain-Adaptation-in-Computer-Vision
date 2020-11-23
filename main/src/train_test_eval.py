@@ -1,6 +1,6 @@
-from src.source_model import source_resnet
-from src.target_model import target_model
-from src.combined_model import merged_network, callbacks_fn, Custom_Eval
+from source_model import source_resnet
+from target_model import target_model
+from combined_model import merged_network, callbacks_fn, Custom_Eval
 import tensorflow as tf
 from tensorflow import keras
 from tqdm import tqdm

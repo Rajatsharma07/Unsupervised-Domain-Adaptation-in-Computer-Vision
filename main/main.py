@@ -1,4 +1,4 @@
-import config as cn
+import src.config as cn
 import tensorflow as tf
 import src.utils as utils
 import src.eval_helper as evals
