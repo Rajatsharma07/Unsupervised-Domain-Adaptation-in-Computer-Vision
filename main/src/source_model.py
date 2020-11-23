@@ -1,6 +1,4 @@
-import tensorflow as tf
 from tensorflow.keras.applications.resnet50 import ResNet50
-from tensorflow import keras
 import config as cn
 from tensorflow.keras import models, layers
 
@@ -20,5 +18,4 @@ def source_resnet(input_shape):
     model = models.Model(
         inputs=base_model.inputs, outputs=predictions, name="Source_Model"
     )
-
     return model

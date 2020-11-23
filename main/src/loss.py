@@ -29,3 +29,4 @@ def kl_divergence(model, source_output, target_output, percent_lambda):
         + 1
     )
     model.add_loss(kl_loss)
+    return kl_loss

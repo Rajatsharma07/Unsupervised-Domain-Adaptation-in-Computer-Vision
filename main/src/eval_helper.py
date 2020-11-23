@@ -56,9 +56,7 @@ def evaluations(
     print("Correct classifications:", int(correct_classifications))
     print("Incorrect classifications:", int(incorrect_classifications))
     pd.set_option("max_columns", None)
-
     con_mat_df = pd.DataFrame(con_mat, index=class_labels, columns=class_labels)
-
     print(con_mat_df)
     # Generating HeatMaps
     plt.figure(figsize=(12, 8))

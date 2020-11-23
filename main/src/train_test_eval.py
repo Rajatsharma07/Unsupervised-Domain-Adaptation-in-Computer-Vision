@@ -7,7 +7,7 @@ from tqdm import tqdm
 from pipeline import fetch_data
 import utils
 import os
-import config as cn
+from tensorflow.keras.utils import plot_model
 
 
 def train(params):
@@ -42,6 +42,10 @@ def train(params):
     tf.compat.v1.logging.info("Creating the callbacks ...")
     callbacks, log_dir = callbacks_fn(params)
 
+    plot_model(source_mdl, os.path.join(log_dir, "source_model.png"), show_shapes=True)
+    plot_model(target_mdl, os.path.join(log_dir, "target_model.png"), show_shapes=True)
+    plot_model(model, os.path.join(log_dir, "merged_model.png"), show_shapes=True)
+
     tf.compat.v1.logging.info("Calling the data preprocessing pipeline...")
     ds_train, ds_test = fetch_data(params)
 
@@ -61,7 +65,7 @@ def train(params):
         # batch_size=params["batch_size"],
     )
 
-    # Evaluation
+    # Plotting
     tf.compat.v1.logging.info("Creating accuracy & loss plots...")
     utils.loss_accuracy_plots(
         hist.history["accuracy"],
@@ -72,6 +76,5 @@ def train(params):
     )
 
     if params["save_model"]:
+        tf.compat.v1.logging.info("Saving the model...")
         model.save(log_dir)
-
-    return model, hist

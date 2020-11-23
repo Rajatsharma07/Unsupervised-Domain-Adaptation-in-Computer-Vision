@@ -4,7 +4,7 @@ import src.utils as utils
 import src.eval_helper as evals
 import os
 import argparse
-from train_test_eval import train
+from src.train_test_eval import train
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 physical_devices = tf.config.list_physical_devices("GPU")

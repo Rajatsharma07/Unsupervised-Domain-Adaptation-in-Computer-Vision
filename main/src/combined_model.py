@@ -103,7 +103,7 @@ class Custom_Eval(tf.keras.callbacks.Callback):
             data=self.acc_metric.result().numpy(),
             step=epoch,
         )
-        print("Custom_accuracy: %.4f" % (float(self.acc_metric.result()),))
+        print("Custom_accuracy: %.3f" % (float(self.acc_metric.result()),))
         print(f"Custom_loss: {loss}, Epoch: {epoch}")
         self.acc_metric.reset_states()
 
