@@ -1,15 +1,9 @@
-from src.preprocessing import get_mnist, get_mnist_m, shuffle_dataset
 import config as cn
-from src.source_model import source_resnet
-from src.target_model import target_model
-from src.combined_model import merged_network, callbacks_fn, Custom_Eval
 import tensorflow as tf
-from tensorflow import keras
 import src.utils as utils
 import src.eval_helper as evals
 import os
 import argparse
-from tensorboard.plugins.hparams import api as hp
 from train_test_eval import train
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
@@ -22,10 +16,11 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--combination",
-        type=str,
+        type=int,
         required=True,
-        help="pass dataset combination string",
+        help="pass experiment combination, see config file",
     )
+
     parser.add_argument(
         "--source_model",
         type=str,
@@ -33,10 +28,23 @@ def main():
         help="pass source model's method name",
     )
     parser.add_argument(
+        "--target_model",
+        type=str,
+        help="pass target model's method name",
+    )
+    parser.add_argument(
         "--sample_seed",
         type=int,
         required=True,
+        default=500,
         help="pass the seed value for shuffling target dataset",
+    )
+
+    parser.add_argument(
+        "--resize",
+        type=int,
+        default=32,
+        help="pass image resizing dimension",
     )
 
     parser.add_argument("--batch_size", default=64, help="batch size", type=int)
@@ -46,50 +54,69 @@ def main():
     )
 
     parser.add_argument(
-        "--mode", help="training, eval or test options", default="", type=str
+        "--mode", help="train, eval or test options", default="", type=str
     )
 
+    # parser.add_argument(
+    #     "--checkpoint_dir", help="Checkpoint directory", default="", type=str
+    # )
+    # parser.add_argument(
+    #     "--test_save_dir",
+    #     help="Directory in which we store the results",
+    #     default="",
+    #     type=str,
+    # )
     parser.add_argument(
-        "--checkpoint_dir", help="Checkpoint directory", default="", type=str
+        "--source_data_dir", help="Source Data path", default="", type=str
     )
     parser.add_argument(
-        "--test_save_dir",
-        help="Directory in which we store the results",
-        default="",
-        type=str,
+        "--target_data_dir", help="Target Data path", default="", type=str
     )
-    parser.add_argument("--data_dir", help="Data Folder", default="", type=str)
 
     parser.add_argument(
         "--log_file",
         help="File in which to redirect console outputs",
-        default="",
+        default=os.path.join(cn.LOGS_DIR, "main.log"),
         type=str,
     )
+    parser.add_argument("--epochs", default=5, help="Epochs", type=int)
+
+    parser.add_argument(
+        "--save_weights",
+        default=False,
+        help="If yes, weights will be saved, otherwise not",
+        type=bool,
+    )
+
+    parser.add_argument(
+        "--save_model",
+        default=False,
+        help="If yes, model will be saved, otherwise not",
+        type=bool,
+    )
+
     args = parser.parse_args()
     params = vars(args)
     print(params)
 
-    """ Fetch Source & Target Dataset"""
-    mnistx_train_or, mnisty_train_or, mnistx_test_or, mnisty_test_or = get_mnist()
+    utils.define_logger(params["log_file"])
 
-    mnistx_train, mnisty_train = shuffle_dataset(
-        mnistx_train_or, mnisty_train_or, cn.seed_val
-    )
-    # mnistx_test, mnisty_test = shuffle_dataset(mnistx_test, mnisty_test, seed_val)
+    assert params[
+        "mode"
+    ], "mode is required, please provide either train, test or eval option"
 
-    mnistmx_train, mnistmx_test = get_mnist_m(cn.MNIST_M_PATH)
+    assert params["mode"] in [
+        "train",
+        "test",
+        "eval",
+    ], "The mode must be train , test or eval"
 
-    """ Evaluation"""
-    utils.loss_accuracy_plots(
-        hist.history["accuracy"],
-        hist.history["val_accuracy"],
-        hist.history["loss"],
-        hist.history["val_loss"],
-        combination=args.combination,
-        source_model=args.source_model,
-        sample_seed=args.sample_seed,
-    )
+    if params["mode"] == "train":
+        model, hist = train(params)
+    elif params["mode"] == "test":
+        test_and_save(params)
+    elif params["mode"] == "eval":
+        evaluate(params)
 
     evals.test_accuracy(model, [mnistmx_test, mnistmx_test], mnisty_test_or)
 

@@ -1,74 +1,77 @@
-import config as cn
-from src.preprocessing import get_mnist, get_mnist_m, shuffle_dataset
 from src.source_model import source_resnet
 from src.target_model import target_model
 from src.combined_model import merged_network, callbacks_fn, Custom_Eval
 import tensorflow as tf
 from tensorflow import keras
-import src.utils as utils
-import src.eval_helper as evals
+from tqdm import tqdm
+from pipeline import fetch_data
+import utils
 import os
-import argparse
-from tensorboard.plugins.hparams import api as hp
+import config as cn
 
 
 def train(params):
+
     assert params["mode"].lower() == "train", "change training mode to 'train'"
 
-    tf.compat.v1.logging.info("Building the model ...")
-
+    tf.compat.v1.logging.info("Fetched the source model: " + params["source_model"])
     source_mdl = None
     source_mdl = source_resnet((32, 32, 3))
 
     # Call Target model
+    tf.compat.v1.logging.info("Fetched the target model: " + params["target_model"])
     target_mdl = None
     target_mdl = target_model(input_shape=(32, 32, 3))
 
     # Create Combined model
+    tf.compat.v1.logging.info("Building the combined model ...")
     model = None
     model = merged_network(
         (32, 32, 3), source_model=source_mdl, target_model=target_mdl, percent=0.7
     )
 
     """ Compilation and Fit"""
+    tf.compat.v1.logging.info("Compiling the combined model ...")
     model.compile(
-        optimizer=keras.optimizers.Adam(learning_rate=0.001),
+        optimizer=keras.optimizers.Adam(learning_rate=params["learning_rate"]),
         loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
         metrics=["accuracy"],
     )
 
     # Create callbacks
-    (
-        csv_logger,
-        cp_callback,
-        tensorboard_callback,
-        reduce_lr_callback,
-        logdir,
-    ) = callbacks_fn(
-        combination=args.combination,
-        source_model=args.source_model,
-        sample_seed=args.sample_seed,
-    )
+    tf.compat.v1.logging.info("Creating the callbacks ...")
+    callbacks, log_dir = callbacks_fn(params)
+
+    tf.compat.v1.logging.info("Calling the data preprocessing pipeline...")
+    ds_train, ds_test = fetch_data(params)
 
     # Custom Evauation Callback
-    custom_eval = Custom_Eval((mnistmx_test, mnisty_test_or))
+    tf.compat.v1.logging.info("Creating the Custom Evaluation callback...")
+    custom_eval = Custom_Eval(ds_test)
+    callbacks[:0] = [custom_eval]
 
+    tf.compat.v1.logging.info("Training Started....")
     hist = None
     hist = model.fit(
-        x=[mnistx_train, mnistmx_train],
-        y=mnisty_train,
-        validation_data=(
-            [mnistmx_train, mnistmx_train],
-            mnisty_train_or,
-        ),
-        epochs=cn.EPOCHS,
-        verbose=1,
-        callbacks=[
-            cp_callback,
-            tensorboard_callback,
-            reduce_lr_callback,
-            custom_eval,
-            csv_logger,
-        ],
-        batch_size=cn.BATCH_SIZE,
+        x=([ds_train[1], ds_train[2]], ds_train[3]),
+        validation_data=([ds_test[1], ds_test[1]], ds_test[2]),
+        epochs=params["epochs"],
+        verbose=2,
+        callbacks=callbacks,
+        # batch_size=params["batch_size"],
     )
+
+    # Evaluation
+    tf.compat.v1.logging.info("Creating accuracy & loss plots...")
+    utils.loss_accuracy_plots(
+        hist.history["accuracy"],
+        hist.history["val_accuracy"],
+        hist.history["loss"],
+        hist.history["val_loss"],
+        params,
+    )
+
+    if params["save_model"]:
+        model.save(log_dir)
+
+    return model, hist

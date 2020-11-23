@@ -10,11 +10,11 @@ def test_accuracy(model, test_set, test_labels, batch=None, verbose=2):
 
     Arguments:
         model {[keras.Model]} -- [Keras model]
-        test_set {[type]} -- [description]
-        test_labels {[type]} -- [description]
+        test_set {[type]} -- [test dataset]
+        test_labels {[type]} -- [test labels]
 
     Keyword Arguments:
-        verbose {int} -- [description] (default: {2})
+        verbose {int} -- [verbose access] (default: {2})
     """
     score = model.evaluate(test_set, test_labels, verbose=verbose, batch_size=batch)
     print(f"Test loss: {score[0]}, Test Accuracy: {score[1]}")
@@ -32,13 +32,14 @@ def evaluations(
     """[This method generates a Heat-Map, Confusion matrix and provides a count of
         Correct & Incorrect predictions]
 
-    Arguments:
-        model {[type]} -- [description]
-        test_set {[type]} -- [description]
-        test_labels {[type]} -- [description]
-
-    Keyword Arguments:
-        class_names_list {list} -- [description] (default: {[]})
+    Args:
+        model ([type]): [model]
+        test_set ([type]): [test dataset]
+        test_labels ([type]): [test labels]
+        batch ([type], optional): [batch size]. Defaults to None.
+        class_names_list (list, optional): [class labels]. Defaults to ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"].
+        pass_pred_prob (bool, optional): [description]. Defaults to False.
+        y_pred ([type], optional): [predicted labels]. Defaults to None.
     """
     if pass_pred_prob:
         y_prob = y_pred
@@ -48,7 +49,7 @@ def evaluations(
     con_mat = tf.math.confusion_matrix(labels=test_labels, predictions=y_pred).numpy()
     class_labels = [val + "-class" for val in class_names_list]
     print(f"Total Test Cases: {con_mat.sum()}")
-    temp_arr = np.eye(10)
+    temp_arr = np.eye(len(class_labels))
     final_conf_mat = con_mat * temp_arr
     correct_classifications = final_conf_mat.sum()
     incorrect_classifications = con_mat.sum() - correct_classifications
@@ -62,3 +63,4 @@ def evaluations(
     # Generating HeatMaps
     plt.figure(figsize=(12, 8))
     sn.heatmap(con_mat_df, annot=True, fmt="g")
+    plt.show()

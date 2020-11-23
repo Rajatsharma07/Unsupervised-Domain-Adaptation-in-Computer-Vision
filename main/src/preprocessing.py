@@ -1,22 +1,6 @@
 import pickle
 import tensorflow as tf
 import numpy as np
-import pandas as pd
-
-# train_dir = "data/mnist_images_csv/"
-# df_train = pd.read_csv(train_dir + "train.csv")
-
-# test_dir = "data/mnist_images_csv/"
-# df_test = pd.read_csv(test_dir + "test.csv")
-
-# file_paths_train = df_train["file_name"].values
-# labels_train = df_train["label"].values
-
-# file_paths_test = df_test["file_name"].values
-# labels_test = df_test["label"].values
-
-# ds_train = tf.data.Dataset.from_tensor_slices((file_paths_train, labels_train))
-# ds_test = tf.data.Dataset.from_tensor_slices((file_paths_test, labels_test))
 
 
 def read_image(image_file, label, directory, channels=3):

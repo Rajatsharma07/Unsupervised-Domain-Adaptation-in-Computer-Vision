@@ -11,6 +11,7 @@ import io
 import sklearn.metrics
 from functools import reduce
 import logging
+import pickle
 
 
 def define_logger(log_file):
@@ -32,7 +33,11 @@ def define_logger(log_file):
 
 
 def loss_accuracy_plots(
-    accuracy, val_accuracy, loss, val_loss, combination, source_model, sample_seed
+    accuracy,
+    val_accuracy,
+    loss,
+    val_loss,
+    params,
 ):
     """[This method generates an Accuracy-Loss graphs using MatplotLib]
 
@@ -43,7 +48,13 @@ def loss_accuracy_plots(
         val_loss {[float]} -- [description]
         combination {[str]} -- [description]
     """
-    my_dir = combination + "_" + source_model + "_" + sample_seed
+    my_dir = (
+        str(params["combination"])
+        + "_"
+        + params["source_model"]
+        + "_"
+        + str(params["sample_seed"])
+    )
     plt.figure(figsize=(18, 8))
     plt.subplot(1, 2, 1)
     plt.plot(loss, "r", label="Training")
@@ -84,6 +95,14 @@ def display_dataset(data, grayscale=True):
         else:
             plt.imshow(data[i])
     plt.show()
+
+
+def extract_mnist_m(mnistm_path):
+    with open(mnistm_path, "rb") as f:
+        mnistm_dataset = pickle.load(f, encoding="bytes")
+    mnistmx_train = mnistm_dataset[b"train"]
+    mnistmx_test = mnistm_dataset[b"test"]
+    return mnistmx_train, mnistmx_test
 
 
 def plot_UMAP(

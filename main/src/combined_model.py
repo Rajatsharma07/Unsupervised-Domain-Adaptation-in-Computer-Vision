@@ -108,55 +108,67 @@ class Custom_Eval(tf.keras.callbacks.Callback):
         self.acc_metric.reset_states()
 
 
-def callbacks_fn(combination, source_model, sample_seed):
+def callbacks_fn(params):
 
-    my_dir = combination + "_" + source_model + "_" + sample_seed
+    my_dir = (
+        str(params["combination"])
+        + "_"
+        + params["source_model"]
+        + "_"
+        + str(params["sample_seed"])
+    )
     print(f"Created directory: {my_dir}")
+    callback_list = []
 
-    assert os.path.exists(cn.MODEL_PATH), "MODEL_PATH doesn't exist"
-    checkpoint_path = os.path.join(cn.MODEL_PATH, my_dir)
-    os.makedirs(checkpoint_path)
-    assert os.path.exists(checkpoint_path), "checkpoint_path doesn't exist"
-    checkpoint_path = os.path.join(
-        checkpoint_path,
-        "weights.{epoch:02d}-{val_accuracy:.2f}.hdf5",
-    )
-    print(f"\nModel Checkpoint path: {checkpoint_path}\n")
+    """Checkpoint Callback """
+    if params["save_weights"]:
+        assert os.path.exists(cn.MODEL_PATH), "MODEL_PATH doesn't exist"
+        checkpoint_path = os.path.join(cn.MODEL_PATH, my_dir)
+        os.makedirs(checkpoint_path)
+        assert os.path.exists(checkpoint_path), "checkpoint_path doesn't exist"
+        checkpoint_path = os.path.join(
+            checkpoint_path,
+            "weights.{epoch:02d}-{val_accuracy:.2f}.hdf5",
+        )
+        cp_callback = tf.keras.callbacks.ModelCheckpoint(
+            filepath=checkpoint_path,
+            save_weights_only=True,
+            save_best_only=True,
+            verbose=1,
+            monitor="val_accuracy",
+        )
+        callback_list.append(cp_callback)
+        print(f"\nModel Checkpoint path: {checkpoint_path}\n")
 
+    """Tensorboard Callback """
     assert os.path.exists(cn.LOGS_DIR), "LOGS_DIR doesn't exist"
-    csv_logger = os.path.join(cn.LOGS_DIR, my_dir)
-    os.makedirs(csv_logger)
-    assert os.path.exists(csv_logger), "csv_logger doesn't exist"
-    tb_logdir = csv_logger
-    print(f"\nModel CSV logs path: {csv_logger}/logs.csv\n")
-    csv_logger = CSVLogger(
-        os.path.join(
-            csv_logger, datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".csv"
-        ),
-        append=True,
-        separator=";",
-    )
-
+    tb_logdir = os.path.join(cn.LOGS_DIR, my_dir)
+    os.makedirs(tb_logdir)
     assert os.path.exists(tb_logdir), "tb_logdir doesn't exist"
     tb_logdir = os.path.join(
         tb_logdir, datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     )
-
+    csv_logger = tb_logdir
     file_writer = tf.summary.create_file_writer(tb_logdir + "/custom_evaluation")
     file_writer.set_as_default()
-
     tensorboard_callback = tf.keras.callbacks.TensorBoard(tb_logdir, histogram_freq=1)
+    callback_list.append(tensorboard_callback)
     print(f"\nTensorboard logs path: {tb_logdir}\n")
 
-    cp_callback = tf.keras.callbacks.ModelCheckpoint(
-        filepath=checkpoint_path,
-        save_weights_only=True,
-        save_best_only=True,
-        verbose=1,
-        monitor="val_accuracy",
+    """CSV Logger Callback """
+    assert os.path.exists(csv_logger), "CSV log path doesn't exist"
+    print(f"\nModel CSV logs path: {csv_logger}\n")
+    csv_logger = CSVLogger(
+        csv_logger + ".csv",
+        append=True,
+        separator=";",
     )
+    callback_list.append(csv_logger)
 
+    """Reduce LR Callback """
     reduce_lr_callback = tf.keras.callbacks.ReduceLROnPlateau(
         monitor="val_loss", factor=0.2, patience=1, min_lr=0.000001
     )
-    return csv_logger, cp_callback, tensorboard_callback, reduce_lr_callback, tb_logdir
+    callback_list.append(reduce_lr_callback)
+
+    return callback_list, tb_logdir
