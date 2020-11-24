@@ -46,7 +46,7 @@ def loss_accuracy_plots(
         val_accuracy {[float]} -- [description]
         loss {[float]} -- [description]
         val_loss {[float]} -- [description]
-        combination {[str]} -- [description]
+        params {[dict]} -- [Dictionary of argparse objects]
     """
     my_dir = (
         str(params["combination"])
@@ -79,7 +79,7 @@ def loss_accuracy_plots(
 
 
 def display_dataset(data, grayscale=True):
-    """[This method visualizes the images present inside dataset]
+    """[This method visualizes the images present inside dataset, without label information]
 
     Arguments:
         data {[type]} -- [description]
