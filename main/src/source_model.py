@@ -1,5 +1,5 @@
 from tensorflow.keras.applications.resnet50 import ResNet50
-import config as cn
+import src.config as cn
 from tensorflow.keras import models, layers
 
 

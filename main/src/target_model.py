@@ -1,6 +1,6 @@
 from tensorflow.keras import layers, models
 from tensorflow.keras.regularizers import l2, l1_l2
-import config as cn
+import src.config as cn
 
 
 def target_model(input_shape=(64, 64, 3)):

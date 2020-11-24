@@ -2,7 +2,7 @@ from tensorflow.keras import layers
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import models
-import config as cn
+import src.config as cn
 from src.loss import coral_loss
 import datetime
 import os
@@ -120,30 +120,11 @@ def callbacks_fn(params):
     print(f"Created directory: {my_dir}")
     callback_list = []
 
-    """Checkpoint Callback """
-    if params["save_weights"]:
-        assert os.path.exists(cn.MODEL_PATH), "MODEL_PATH doesn't exist"
-        checkpoint_path = os.path.join(cn.MODEL_PATH, my_dir)
-        os.makedirs(checkpoint_path)
-        assert os.path.exists(checkpoint_path), "checkpoint_path doesn't exist"
-        checkpoint_path = os.path.join(
-            checkpoint_path,
-            "weights.{epoch:02d}-{val_accuracy:.2f}.hdf5",
-        )
-        cp_callback = tf.keras.callbacks.ModelCheckpoint(
-            filepath=checkpoint_path,
-            save_weights_only=True,
-            save_best_only=True,
-            verbose=1,
-            monitor="val_accuracy",
-        )
-        callback_list.append(cp_callback)
-        print(f"\nModel Checkpoint path: {checkpoint_path}\n")
-
     """Tensorboard Callback """
     assert os.path.exists(cn.LOGS_DIR), "LOGS_DIR doesn't exist"
     tb_logdir = os.path.join(cn.LOGS_DIR, my_dir)
-    os.makedirs(tb_logdir)
+    if not os.path.exists(tb_logdir):
+        os.makedirs(tb_logdir)
     assert os.path.exists(tb_logdir), "tb_logdir doesn't exist"
     tb_logdir = os.path.join(
         tb_logdir, datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -170,5 +151,26 @@ def callbacks_fn(params):
         monitor="val_loss", factor=0.2, patience=1, min_lr=0.000001
     )
     callback_list.append(reduce_lr_callback)
+
+    """Checkpoint Callback """
+    if params["save_weights"]:
+        assert os.path.exists(cn.MODEL_PATH), "MODEL_PATH doesn't exist"
+        checkpoint_path = os.path.join(cn.MODEL_PATH, my_dir)
+        if not os.path.exists(checkpoint_path):
+            os.makedirs(checkpoint_path)
+        assert os.path.exists(checkpoint_path), "checkpoint_path doesn't exist"
+        checkpoint_path = os.path.join(
+            checkpoint_path,
+            "weights.{epoch:02d}-{val_accuracy:.2f}.hdf5",
+        )
+        cp_callback = tf.keras.callbacks.ModelCheckpoint(
+            filepath=checkpoint_path,
+            save_weights_only=True,
+            save_best_only=True,
+            verbose=1,
+            monitor="val_accuracy",
+        )
+        callback_list.append(cp_callback)
+        print(f"\nModel Checkpoint path: {checkpoint_path}\n")
 
     return callback_list, tb_logdir

@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import umap
 import h5py
-import config as cn
+import src.config as cn
 import os
 import io
 import sklearn.metrics

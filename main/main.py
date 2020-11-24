@@ -4,7 +4,7 @@ import src.utils as utils
 import src.eval_helper as evals
 import os
 import argparse
-from src.train_test_eval import train
+from src.train_eval import train
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 physical_devices = tf.config.list_physical_devices("GPU")
@@ -12,30 +12,30 @@ physical_devices = tf.config.list_physical_devices("GPU")
 # tf.config.experimental.set_memory_growth(physical_devices[1], True)
 
 
-def main():
-    parser = argparse.ArgumentParser()
+def parse_args():
+    parser = argparse.ArgumentParser(description="Arguments for the experiment")
     parser.add_argument(
         "--combination",
         type=int,
-        required=True,
+        default=1,
         help="pass experiment combination, see config file",
     )
 
     parser.add_argument(
         "--source_model",
         type=str,
-        required=True,
+        default="Resnet50",
         help="pass source model's method name",
     )
     parser.add_argument(
         "--target_model",
         type=str,
+        default="target_model",
         help="pass target model's method name",
     )
     parser.add_argument(
         "--sample_seed",
         type=int,
-        required=True,
         default=500,
         help="pass the seed value for shuffling target dataset",
     )
@@ -54,7 +54,7 @@ def main():
     )
 
     parser.add_argument(
-        "--mode", help="train, eval or test options", default="", type=str
+        "--mode", help="train, eval or test options", default="train", type=str
     )
 
     # parser.add_argument(
@@ -76,7 +76,7 @@ def main():
     parser.add_argument(
         "--log_file",
         help="File in which to redirect console outputs",
-        default=os.path.join(cn.LOGS_DIR, "main.log"),
+        default=os.path.join(cn.LOGS_DIR, "experiments.log"),
         type=str,
     )
     parser.add_argument("--epochs", default=5, help="Epochs", type=int)
@@ -95,6 +95,11 @@ def main():
         type=bool,
     )
 
+    return parser
+
+
+def main():
+    parser = parse_args()
     args = parser.parse_args()
     params = vars(args)
     print(params)
@@ -113,14 +118,14 @@ def main():
 
     if params["mode"] == "train":
         model, hist = train(params)
-    elif params["mode"] == "test":
-        test_and_save(params)
-    elif params["mode"] == "eval":
-        evaluate(params)
+    # elif params["mode"] == "test":
+    #     test_and_save(params)
+    # elif params["mode"] == "eval":
+    #     evaluate(params)
 
-    evals.test_accuracy(model, [mnistmx_test, mnistmx_test], mnisty_test_or)
+    # evals.test_accuracy(model, [mnistmx_test, mnistmx_test], mnisty_test_or)
 
-    evals.test_accuracy(model, [mnistmx_test, mnistmx_test], mnisty_test_or)
+    # evals.test_accuracy(model, [mnistmx_test, mnistmx_test], mnisty_test_or)
 
 
 if __name__ == "__main__":
