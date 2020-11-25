@@ -62,6 +62,7 @@ def loss_accuracy_plots(
         cn.EVALUATION, (Path(log_dir).parent).name, Path(log_dir).name
     )
     Path(plot_path).mkdir(parents=True, exist_ok=True)
+    tf.compat.v1.logging.info(f"Plots created at {plot_path}")
     plot_path = os.path.join(plot_path, "Accuracy_Loss_Plots.png")
     plt.savefig(plot_path)
     plt.show()

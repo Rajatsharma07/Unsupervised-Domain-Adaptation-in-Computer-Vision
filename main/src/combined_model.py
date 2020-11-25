@@ -152,7 +152,7 @@ def callbacks_fn(params):
     file_writer.set_as_default()
     tensorboard_callback = tf.keras.callbacks.TensorBoard(tb_logdir, histogram_freq=1)
     callback_list.append(tensorboard_callback)
-    print(f"\nTensorboard logs path: {tb_logdir}\n")
+    # print(f"\nTensorboard logs path: {tb_logdir}\n")
     tf.compat.v1.logging.info(f"Tensorboard logs path: {tb_logdir}")
 
     """CSV Logger Callback """
@@ -163,13 +163,13 @@ def callbacks_fn(params):
         append=True,
         separator=";",
     )
-    print(f"\nModel CSV logs path: {csv}\n")
+    # print(f"\nModel CSV logs path: {csv}\n")
     tf.compat.v1.logging.info(f"Model CSV logs path: {csv}")
     callback_list.append(csv_logger)
 
     """Reduce LR Callback """
     reduce_lr_callback = tf.keras.callbacks.ReduceLROnPlateau(
-        monitor="val_loss", factor=0.2, patience=1, min_lr=0.000001
+        monitor="val_accuracy", factor=0.2, patience=1, min_lr=0.000001
     )
     callback_list.append(reduce_lr_callback)
 
@@ -193,7 +193,7 @@ def callbacks_fn(params):
             monitor="val_accuracy",
         )
         callback_list.append(cp_callback)
-        print(f"\nModel Checkpoint path: {checkpoint_path}\n")
+        # print(f"\nModel Checkpoint path: {checkpoint_path}\n")
         tf.compat.v1.logging.info(f"Model Checkpoint path: {checkpoint_path}")
 
     return callback_list, log_dir

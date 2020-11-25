@@ -148,7 +148,8 @@ logs/
 *.h5
 *.pkl
 *.pth 
-.npy
+*.npy
+*.hdf5
 
 # Flake 8 file
 .flake8

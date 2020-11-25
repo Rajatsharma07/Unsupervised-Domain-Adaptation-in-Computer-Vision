@@ -20,7 +20,7 @@ def test_accuracy(model, test_set, test_labels, batch=None, verbose=2):
         verbose {int} -- [verbose access] (default: {2})
     """
     score = model.evaluate(test_set, test_labels, verbose=verbose, batch_size=batch)
-    print(f"Test loss: {score[0]}, Test Accuracy: {score[1]}")
+    tf.compat.v1.logging.info(f"Test loss: {score[0]}, Test Accuracy: {score[1]}")
 
 
 def evaluations(
@@ -58,11 +58,15 @@ def evaluations(
     final_conf_mat = con_mat * temp_arr
     correct_classifications = final_conf_mat.sum()
     incorrect_classifications = con_mat.sum() - correct_classifications
-    print("Correct classifications:", int(correct_classifications))
-    print("Incorrect classifications:", int(incorrect_classifications))
+    tf.compat.v1.logging.info(
+        f"Correct classifications: {int(correct_classifications)}"
+    )
+    tf.compat.v1.logging.info(
+        f"Incorrect classifications: {int(incorrect_classifications)}"
+    )
     pd.set_option("max_columns", None)
     con_mat_df = pd.DataFrame(con_mat, index=class_labels, columns=class_labels)
-    print(con_mat_df)
+    # print(con_mat_df)
     # Generating HeatMaps
     plt.figure(figsize=(12, 8))
     sn.heatmap(con_mat_df, annot=True, fmt="g")
@@ -72,4 +76,5 @@ def evaluations(
     Path(plot_path).mkdir(parents=True, exist_ok=True)
     plot_path = os.path.join(plot_path, "Heatmap.png")
     plt.savefig(plot_path)
+    tf.compat.v1.logging.info(f"Evaluation plot saved at {plot_path}")
     plt.show()

@@ -69,14 +69,6 @@ def train(params):
     )
     tf.compat.v1.logging.info("Training finished....")
 
-    """ Plotting """
-    tf.compat.v1.logging.info("Creating accuracy & loss plots...")
-    utils.loss_accuracy_plots(
-        history=hist,
-        subdirectory=log_dir,
-        params=params,
-    )
-
     """ Model Saving """
     if params["save_model"]:
         tf.compat.v1.logging.info("Saving the model...")
@@ -87,4 +79,11 @@ def train(params):
         model.save(model_path)
         tf.compat.v1.logging.info(f"Model successfully saved at: {model_path}")
 
+    """ Plotting """
+    tf.compat.v1.logging.info("Creating accuracy & loss plots...")
+    utils.loss_accuracy_plots(
+        hist=hist,
+        log_dir=log_dir,
+        params=params,
+    )
     return model, hist
