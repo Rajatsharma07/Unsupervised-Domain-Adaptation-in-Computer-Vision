@@ -38,29 +38,10 @@ def loss_accuracy_plots(
     log_dir,
     params,
 ):
-<<<<<<< HEAD
     accuracy = hist.history["accuracy"]
     val_accuracy = hist.history["val_accuracy"]
     loss = hist.history["loss"]
     val_loss = hist.history["val_loss"]
-=======
-    """[This method generates an Accuracy-Loss graphs using MatplotLib]
-
-    Arguments:
-        accuracy {[float]} -- [description]
-        val_accuracy {[float]} -- [description]
-        loss {[float]} -- [description]
-        val_loss {[float]} -- [description]
-        params {[dict]} -- [Dictionary of argparse objects]
-    """
-    my_dir = (
-        str(params["combination"])
-        + "_"
-        + params["source_model"]
-        + "_"
-        + str(params["sample_seed"])
-    )
->>>>>>> 2600f666aeb0560f00b52d6ba2dcc3b150d54f49
     plt.figure(figsize=(18, 8))
     plt.subplot(1, 2, 1)
     plt.plot(loss, "r", label="Training")
@@ -80,7 +61,6 @@ def loss_accuracy_plots(
     plot_path = os.path.join(
         cn.EVALUATION, (Path(log_dir).parent).name, Path(log_dir).name
     )
-    # plot_path = os.path.join(cn.EVALUATION, my_dir, subdirectory)
     Path(plot_path).mkdir(parents=True, exist_ok=True)
     plot_path = os.path.join(plot_path, "Accuracy_Loss_Plots.png")
     plt.savefig(plot_path)
