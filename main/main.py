@@ -1,10 +1,9 @@
 import src.config as cn
 import tensorflow as tf
 import src.utils as utils
-import src.eval_helper as evals
 import os
 import argparse
-from src.train_eval import train
+from src.train_eval import train, evaluate
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 physical_devices = tf.config.list_physical_devices("GPU")
@@ -57,15 +56,10 @@ def parse_args():
         "--mode", help="train, eval or test options", default="train", type=str
     )
 
-    # parser.add_argument(
-    #     "--checkpoint_dir", help="Checkpoint directory", default="", type=str
-    # )
-    # parser.add_argument(
-    #     "--test_save_dir",
-    #     help="Directory in which we store the results",
-    #     default="",
-    #     type=str,
-    # )
+    parser.add_argument(
+        "--lambda_loss", help="Additional loss lambda value", default=0.5, type=float
+    )
+
     parser.add_argument(
         "--source_data_dir", help="Source Data path", default="", type=str
     )

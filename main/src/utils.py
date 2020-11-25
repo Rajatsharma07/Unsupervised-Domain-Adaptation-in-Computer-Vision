@@ -71,8 +71,9 @@ def loss_accuracy_plots(
 def display_dataset(data, grayscale=True):
     """[This method visualizes the images present inside dataset, without label information]
 
-    Arguments:
-        data {[type]} -- [description]
+    Args:
+        data ([type]): [description]
+        grayscale (bool, optional): [description]. Defaults to True.
     """
     plt.figure(figsize=(6, 6))
     for i in range(9):

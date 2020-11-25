@@ -9,6 +9,7 @@ from tensorflow.keras.utils import plot_model
 import os
 import src.config as cn
 from pathlib import Path
+from src.eval_helper import test_accuracy, evaluation_plots
 
 
 def train(params):
@@ -29,7 +30,10 @@ def train(params):
     tf.compat.v1.logging.info("Building the combined model ...")
     model = None
     model = merged_network(
-        (32, 32, 3), source_model=source_mdl, target_model=target_mdl, percent=0.7
+        input_shape=(32, 32, 3),
+        source_model=source_mdl,
+        target_model=target_mdl,
+        percent=params["lambda_loss"],
     )
 
     """ Model Compilation """
@@ -87,3 +91,27 @@ def train(params):
         params=params,
     )
     return model, hist
+
+
+def evaluate(
+    model_path,
+    test_set,
+    test_labels,
+    log_dir,
+    params,
+    class_names_list=["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
+    batch_size=None,
+):
+    tf.compat.v1.logging.info("Starting Evaluation...")
+    test_accuracy(
+        test_set=test_set, test_labels=test_labels, model=model_path, batch=batch_size
+    )
+    evaluation_plots(
+        model=model_path,
+        test_set=test_set,
+        test_labels=test_labels,
+        log_dir=log_dir,
+        batch=batch_size,
+        class_names_list=class_names_list,
+        params=params,
+    )

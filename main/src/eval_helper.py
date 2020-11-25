@@ -8,52 +8,67 @@ from pathlib import Path
 import src.config as cn
 
 
-def test_accuracy(model, test_set, test_labels, batch=None, verbose=2):
+def test_accuracy(
+    model,
+    test_set=None,
+    test_labels=None,
+    batch=None,
+    verbose=2,
+    tf_dataset=None,
+    is_tfdataset=False,
+):
     """[This method gives test_accuracy as on output]
 
-    Arguments:
-        model {[keras.Model]} -- [Keras model]
-        test_set {[type]} -- [test dataset]
-        test_labels {[type]} -- [test labels]
-
-    Keyword Arguments:
-        verbose {int} -- [verbose access] (default: {2})
+    Args:
+        model ([keras.Model]): [Keras model]
+        test_set ([type], optional): [test dataset]. Defaults to None.
+        test_labels ([type], optional): [test labels]. Defaults to None.
+        batch ([type], optional): [description]. Defaults to None.
+        verbose (int, optional): [verbose access]. Defaults to 2.
+        tf_dataset ([type], optional): [TFDS dataset]. Defaults to None.
+        is_tfdataset (bool, optional): [Yes if TF data pipeline is used]. Defaults to False.
     """
-    score = model.evaluate(test_set, test_labels, verbose=verbose, batch_size=batch)
-    tf.compat.v1.logging.info(f"Test loss: {score[0]}, Test Accuracy: {score[1]}")
+    if is_tfdataset:
+        loss, accuracy = model.evaluate(tf_dataset, verbose=verbose, batch_size=batch)
+    else:
+        loss, accuracy = model.evaluate(
+            test_set, test_labels, verbose=verbose, batch_size=batch
+        )
+    tf.compat.v1.logging.info(f"Test loss: {loss}, Test Accuracy: {accuracy}")
 
 
-def evaluations(
+def evaluation_plots(
     model,
     test_set,
     test_labels,
     log_dir,
+    class_names_list,
+    params,
     batch=None,
-    class_names_list=["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
-    pass_pred_prob=False,
-    y_pred=None,
+    tf_dataset=None,
+    is_tfdataset=False,
 ):
-    """[This method generates a Heat-Map, Confusion matrix and provides a count of
-        Correct & Incorrect predictions]
+    """[This method generates a Heat-Map, Confusion matrix and provides a count of Correct & Incorrect predictions]
 
     Args:
-        model ([type]): [model]
-        test_set ([type]): [test dataset]
-        test_labels ([type]): [test labels]
-        log_dir ([str]): [path to save the figures]
-        batch ([type], optional): [batch size]. Defaults to None.
-        class_names_list (list, optional): [class labels]. Defaults to ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"].
-        pass_pred_prob (bool, optional): [description]. Defaults to False.
-        y_pred ([type], optional): [predicted labels]. Defaults to None.
+        model ([keras.Model]): [description]
+        test_set ([type]): [test_set]
+        test_labels ([type]): [test_labels]
+        log_dir ([str]): [log direcory]
+        class_names_list ([type]): [class labels]
+        params ([dict]): [Argparse dictionary]
+        batch ([int], optional): [batch size]. Defaults to None.
+        tf_dataset ([type], optional): [TFDS dataset]. Defaults to None.
+        is_tfdataset (bool, optional): [Yes if TF data pipeline is used]. Defaults to False.
     """
-    if pass_pred_prob:
-        y_prob = y_pred
+    if is_tfdataset:
+        y_pred = model.predict(tf_dataset, batch_size=batch)
     else:
-        y_prob = model.predict(test_set, batch_size=batch)
-    y_pred = np.argmax(y_prob, axis=1)
+        y_pred = model.predict(test_set, batch_size=batch)
+    # y_pred = np.argmax(y_prob, axis=1)
     con_mat = tf.math.confusion_matrix(labels=test_labels, predictions=y_pred).numpy()
     class_labels = [val + "-class" for val in class_names_list]
-    print(f"Total Test Cases: {con_mat.sum()}")
+    tf.compat.v1.logging.info(f"Total Test Cases: {con_mat.sum()}")
     temp_arr = np.eye(len(class_labels))
     final_conf_mat = con_mat * temp_arr
     correct_classifications = final_conf_mat.sum()

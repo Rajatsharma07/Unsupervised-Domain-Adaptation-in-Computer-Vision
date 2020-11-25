@@ -111,15 +111,15 @@ class Custom_Eval(tf.keras.callbacks.Callback):
         total_val_loss = tf.reduce_mean(self.custom_loss).numpy()
         total_val_acc = tf.reduce_mean(self.custom_acc).numpy()
         # Writing to CSV logs
-        logs["custom_accuracy"] = total_val_acc
-        logs["custom_loss"] = total_val_loss
+        logs["custom_evaluation_accuracy"] = total_val_acc
+        logs["custom_evaluation_loss"] = total_val_loss
         # Writing to tensorboad logs
-        tf.summary.scalar("Custom Evaluation loss", data=total_val_loss, step=epoch)
-        tf.summary.scalar(
-            "Custom Evaluation Accuracy",
-            data=total_val_acc,
-            step=epoch,
-        )
+        # tf.summary.scalar("Custom Evaluation loss", data=total_val_loss, step=epoch)
+        # tf.summary.scalar(
+        #     "Custom Evaluation Accuracy",
+        #     data=total_val_acc,
+        #     step=epoch,
+        # )
         print(
             "custom_accuracy --> %.3f" % (float(total_val_acc),),
             f"custom_loss --> {total_val_loss}",
@@ -148,8 +148,8 @@ def callbacks_fn(params):
         tb_logdir, datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     )
     log_dir = tb_logdir
-    file_writer = tf.summary.create_file_writer(tb_logdir + "/custom_evaluation")
-    file_writer.set_as_default()
+    # file_writer = tf.summary.create_file_writer(tb_logdir + "/custom_evaluation")
+    # file_writer.set_as_default()
     tensorboard_callback = tf.keras.callbacks.TensorBoard(tb_logdir, histogram_freq=1)
     callback_list.append(tensorboard_callback)
     # print(f"\nTensorboard logs path: {tb_logdir}\n")
