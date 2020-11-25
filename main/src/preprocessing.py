@@ -72,6 +72,8 @@ def fetch_data(params):
             (mnistmx_train, mnistmy_train)
         )
 
+        # ds_custom_val = (mnistmx_train, mnistmy_train)
+
         ds_test = tf.data.Dataset.from_tensor_slices(
             ((mnistmx_train, mnistmx_train), mnistmy_train)
         )
@@ -84,9 +86,9 @@ def fetch_data(params):
                 num_parallel_calls=cn.AUTOTUNE,
             )
             .cache()
-            .shuffle(mnisty_train.shape[0])
             .batch(params["batch_size"])
             .prefetch(cn.AUTOTUNE)
+            # .shuffle(mnisty_train.shape[0])
         )
 
         # Setup for test Dataset
@@ -116,7 +118,10 @@ def fetch_data(params):
             .batch(params["batch_size"])
             .prefetch(cn.AUTOTUNE)
         )
-
+        # ds_custom_val = (
+        #     resize_and_rescale(ds_custom_val[0], 32, False),
+        #     ds_custom_val[1],
+        # )
         count = 0
         for x in ds_train:
             count += 1

@@ -118,10 +118,10 @@ def main():
 
     if params["mode"] == "train":
         model, hist = train(params)
-    # elif params["mode"] == "test":
-    #     test_and_save(params)
-    # elif params["mode"] == "eval":
-    #     evaluate(params)
+
+    elif params["mode"] == "eval":
+        pass
+        # evaluate(params)
 
     # evals.test_accuracy(model, [mnistmx_test, mnistmx_test], mnisty_test_or)
 

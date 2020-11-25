@@ -3,6 +3,9 @@ import seaborn as sn
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
+import os
+from pathlib import Path
+import config as cn
 
 
 def test_accuracy(model, test_set, test_labels, batch=None, verbose=2):
@@ -24,6 +27,7 @@ def evaluations(
     model,
     test_set,
     test_labels,
+    log_dir,
     batch=None,
     class_names_list=["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
     pass_pred_prob=False,
@@ -36,6 +40,7 @@ def evaluations(
         model ([type]): [model]
         test_set ([type]): [test dataset]
         test_labels ([type]): [test labels]
+        log_dir ([str]): [path to save the figures]
         batch ([type], optional): [batch size]. Defaults to None.
         class_names_list (list, optional): [class labels]. Defaults to ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"].
         pass_pred_prob (bool, optional): [description]. Defaults to False.
@@ -61,4 +66,10 @@ def evaluations(
     # Generating HeatMaps
     plt.figure(figsize=(12, 8))
     sn.heatmap(con_mat_df, annot=True, fmt="g")
+    plot_path = os.path.join(
+        cn.EVALUATION, (Path(log_dir).parent).name, Path(log_dir).name
+    )
+    Path(plot_path).mkdir(parents=True, exist_ok=True)
+    plot_path = os.path.join(plot_path, "Heatmap.png")
+    plt.savefig(plot_path)
     plt.show()

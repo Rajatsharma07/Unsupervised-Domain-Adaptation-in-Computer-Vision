@@ -6,8 +6,10 @@ from tensorflow import keras
 from tqdm import tqdm
 from src.preprocessing import fetch_data
 import src.utils as utils
-import os
 from tensorflow.keras.utils import plot_model
+import os
+import config as cn
+from pathlib import Path
 
 
 def train(params):
@@ -31,7 +33,7 @@ def train(params):
         (32, 32, 3), source_model=source_mdl, target_model=target_mdl, percent=0.7
     )
 
-    """ Compilation and Fit"""
+    """ Model Compilation """
     tf.compat.v1.logging.info("Compiling the combined model ...")
     model.compile(
         optimizer=keras.optimizers.Adam(learning_rate=params["learning_rate"]),
@@ -39,22 +41,28 @@ def train(params):
         metrics=["accuracy"],
     )
 
-    # Create callbacks
+    """ Create callbacks """
     tf.compat.v1.logging.info("Creating the callbacks ...")
     callbacks, log_dir = callbacks_fn(params)
 
-    # plot_model(source_mdl, os.path.join(log_dir, "source_model.png"), show_shapes=True)
-    # plot_model(target_mdl, os.path.join(log_dir, "target_model.png"), show_shapes=True)
-    # plot_model(model, os.path.join(log_dir, "merged_model.png"), show_shapes=True)
+    plot_model(source_mdl, os.path.join(log_dir, "source_model.png"), show_shapes=True)
+    plot_model(target_mdl, os.path.join(log_dir, "target_model.png"), show_shapes=True)
+    plot_model(model, os.path.join(log_dir, "merged_model.png"), show_shapes=True)
 
     tf.compat.v1.logging.info("Calling data preprocessing pipeline...")
-    ds_train, ds_custom_val, ds_test = fetch_data(params)
+    ds_train, _, ds_test = fetch_data(params)
 
-    # Custom Evauation Callback
-    tf.compat.v1.logging.info("Creating custom evaluation callback...")
-    custom_eval = Custom_Eval(ds_custom_val)
-    callbacks[:0] = [custom_eval]
+    """ Custom Evauation Callback """
+    # tf.compat.v1.logging.info("Creating custom evaluation callback...")
+    # custom_eval = Custom_Eval(
+    #     (
+    #         list(ds_custom_val)[0],
+    #         list(ds_custom_val)[1],
+    #     )
+    # )
+    # callbacks[:0] = [custom_eval]
 
+    """ Model Training """
     tf.compat.v1.logging.info("Training Started....")
     hist = None
     hist = model.fit(
@@ -65,17 +73,24 @@ def train(params):
         callbacks=callbacks,
         # batch_size=params["batch_size"],
     )
+    tf.compat.v1.logging.info("Training finished....")
 
-    # Plotting
+    """ Plotting """
     tf.compat.v1.logging.info("Creating accuracy & loss plots...")
     utils.loss_accuracy_plots(
-        hist.history["accuracy"],
-        hist.history["val_accuracy"],
-        hist.history["loss"],
-        hist.history["val_loss"],
-        params,
+        history=hist,
+        subdirectory=log_dir,
+        params=params,
     )
 
+    """ Model Saving """
     if params["save_model"]:
         tf.compat.v1.logging.info("Saving the model...")
-        model.save(log_dir)
+        model_path = os.path.join(
+            cn.MODEL_PATH, (Path(log_dir).parent).name, Path(log_dir).name
+        )
+        Path(model_path).mkdir(parents=True, exist_ok=True)
+        model.save(model_path)
+        tf.compat.v1.logging.info(f"Model successfully saved at: {model_path}")
+
+    return model, hist

@@ -7,6 +7,7 @@ from src.loss import coral_loss
 import datetime
 import os
 from tensorflow.keras.callbacks import CSVLogger
+from pathlib import Path
 
 
 def merged_network(
@@ -129,21 +130,24 @@ def callbacks_fn(params):
     tb_logdir = os.path.join(
         tb_logdir, datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     )
-    csv_logger = tb_logdir
+    log_dir = tb_logdir
     file_writer = tf.summary.create_file_writer(tb_logdir + "/custom_evaluation")
     file_writer.set_as_default()
     tensorboard_callback = tf.keras.callbacks.TensorBoard(tb_logdir, histogram_freq=1)
     callback_list.append(tensorboard_callback)
     print(f"\nTensorboard logs path: {tb_logdir}\n")
+    tf.compat.v1.logging.info(f"Tensorboard logs path: {tb_logdir}")
 
     """CSV Logger Callback """
-    assert os.path.exists(csv_logger), "CSV log path doesn't exist"
-    print(f"\nModel CSV logs path: {csv_logger}\n")
+    assert os.path.exists(log_dir), "CSV log path doesn't exist"
+    csv = os.path.join(log_dir, "logs.csv")
     csv_logger = CSVLogger(
-        csv_logger + ".csv",
+        csv,
         append=True,
         separator=";",
     )
+    print(f"\nModel CSV logs path: {csv}\n")
+    tf.compat.v1.logging.info(f"Model CSV logs path: {csv}")
     callback_list.append(csv_logger)
 
     """Reduce LR Callback """
@@ -155,9 +159,10 @@ def callbacks_fn(params):
     """Checkpoint Callback """
     if params["save_weights"]:
         assert os.path.exists(cn.MODEL_PATH), "MODEL_PATH doesn't exist"
-        checkpoint_path = os.path.join(cn.MODEL_PATH, my_dir)
-        if not os.path.exists(checkpoint_path):
-            os.makedirs(checkpoint_path)
+        checkpoint_path = os.path.join(
+            cn.MODEL_PATH, (Path(log_dir).parent).name, Path(log_dir).name
+        )
+        Path(checkpoint_path).mkdir(parents=True, exist_ok=True)
         assert os.path.exists(checkpoint_path), "checkpoint_path doesn't exist"
         checkpoint_path = os.path.join(
             checkpoint_path,
@@ -172,5 +177,6 @@ def callbacks_fn(params):
         )
         callback_list.append(cp_callback)
         print(f"\nModel Checkpoint path: {checkpoint_path}\n")
+        tf.compat.v1.logging.info(f"Model Checkpoint path: {checkpoint_path}")
 
-    return callback_list, tb_logdir
+    return callback_list, log_dir

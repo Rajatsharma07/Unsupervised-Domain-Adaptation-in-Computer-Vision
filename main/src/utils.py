@@ -12,6 +12,7 @@ import sklearn.metrics
 from functools import reduce
 import logging
 import pickle
+from pathlib import Path
 
 
 def define_logger(log_file):
@@ -33,28 +34,14 @@ def define_logger(log_file):
 
 
 def loss_accuracy_plots(
-    accuracy,
-    val_accuracy,
-    loss,
-    val_loss,
+    hist,
+    log_dir,
     params,
 ):
-    """[This method generates an Accuracy-Loss graphs using MatplotLib]
-
-    Arguments:
-        accuracy {[float]} -- [description]
-        val_accuracy {[float]} -- [description]
-        loss {[float]} -- [description]
-        val_loss {[float]} -- [description]
-        combination {[str]} -- [description]
-    """
-    my_dir = (
-        str(params["combination"])
-        + "_"
-        + params["source_model"]
-        + "_"
-        + str(params["sample_seed"])
-    )
+    accuracy = hist.history["accuracy"]
+    val_accuracy = hist.history["val_accuracy"]
+    loss = hist.history["loss"]
+    val_loss = hist.history["val_loss"]
     plt.figure(figsize=(18, 8))
     plt.subplot(1, 2, 1)
     plt.plot(loss, "r", label="Training")
@@ -71,10 +58,13 @@ def loss_accuracy_plots(
     plt.title("Training and Validation Accuracy")
     plt.xlabel("Epochs")
     plt.ylabel("Accuracy")
-    plot_path = os.path.join(cn.MODEL_PATH, my_dir)
-    if os.path.exists(plot_path):
-        plot_path = os.path.join(plot_path, "Accuracy_Loss_Plots.png")
-        plt.savefig(plot_path)
+    plot_path = os.path.join(
+        cn.EVALUATION, (Path(log_dir).parent).name, Path(log_dir).name
+    )
+    # plot_path = os.path.join(cn.EVALUATION, my_dir, subdirectory)
+    Path(plot_path).mkdir(parents=True, exist_ok=True)
+    plot_path = os.path.join(plot_path, "Accuracy_Loss_Plots.png")
+    plt.savefig(plot_path)
     plt.show()
 
 
@@ -133,7 +123,6 @@ def plot_UMAP(
         n_neighbors=n_neighbors, min_dist=min_dist, metric=metric, random_state=5
     ).fit_transform(input_data)
     print("shape of umap_reduced.shape = ", embedding.shape)
-    tf.keras.backend.clear_session()  # For easy reset of notebook state.
     # attaching the label for each 2-d data point
     # creating a new data fram which help us in ploting the result data
     umap_data = np.vstack((embedding.T, input_labels)).T
