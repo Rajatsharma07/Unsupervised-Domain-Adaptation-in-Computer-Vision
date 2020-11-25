@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 from pathlib import Path
-import config as cn
+import src.config as cn
 
 
 def test_accuracy(model, test_set, test_labels, batch=None, verbose=2):

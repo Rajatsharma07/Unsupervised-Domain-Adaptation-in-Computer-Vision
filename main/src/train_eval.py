@@ -3,12 +3,11 @@ from src.target_model import target_model
 from src.combined_model import merged_network, callbacks_fn, Custom_Eval
 import tensorflow as tf
 from tensorflow import keras
-from tqdm import tqdm
 from src.preprocessing import fetch_data
 import src.utils as utils
 from tensorflow.keras.utils import plot_model
 import os
-import config as cn
+import src.config as cn
 from pathlib import Path
 
 
@@ -50,17 +49,12 @@ def train(params):
     plot_model(model, os.path.join(log_dir, "merged_model.png"), show_shapes=True)
 
     tf.compat.v1.logging.info("Calling data preprocessing pipeline...")
-    ds_train, _, ds_test = fetch_data(params)
+    ds_train, ds_val, ds_test = fetch_data(params)
 
     """ Custom Evauation Callback """
-    # tf.compat.v1.logging.info("Creating custom evaluation callback...")
-    # custom_eval = Custom_Eval(
-    #     (
-    #         list(ds_custom_val)[0],
-    #         list(ds_custom_val)[1],
-    #     )
-    # )
-    # callbacks[:0] = [custom_eval]
+    tf.compat.v1.logging.info("Creating custom evaluation callback...")
+    custom_eval = Custom_Eval(ds_val)
+    callbacks[:0] = [custom_eval]
 
     """ Model Training """
     tf.compat.v1.logging.info("Training Started....")

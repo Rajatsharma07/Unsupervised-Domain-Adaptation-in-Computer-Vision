@@ -92,21 +92,38 @@ class Custom_Eval(tf.keras.callbacks.Callback):
             name="custom_accuracy_metric"
         )
 
+    def on_epoch_begin(self, epoch, logs):
+        self.custom_loss = []
+        self.custom_acc = []
+
     def on_epoch_end(self, epoch, logs):
-        x = self.model.layers[3](self.validation_data[0], training=False)
-        y_pred = self.model.layers[6](x, training=False)
-        loss = self.loss_fn(self.validation_data[1], y_pred)
-        logs["custom_accuracy"] = self.acc_metric.result().numpy()
-        logs["custom_loss"] = loss.numpy()
-        tf.summary.scalar("Custom Evaluation loss", data=loss.numpy(), step=epoch)
+        for batch_idx, (x_batch, y_batch) in enumerate(self.validation_data):
+            x = self.model.layers[3](x_batch, training=False)
+            y_pred = self.model.layers[6](x, training=False)
+
+            loss = self.loss_fn(y_batch, y_pred)
+            self.custom_loss.append(loss.numpy())
+
+            self.acc_metric.update_state(y_batch, y_pred)
+            self.custom_acc.append(self.acc_metric.result().numpy())
+            self.acc_metric.reset_states()
+
+        total_val_loss = tf.reduce_mean(self.custom_loss).numpy()
+        total_val_acc = tf.reduce_mean(self.custom_acc).numpy()
+        # Writing to CSV logs
+        logs["custom_accuracy"] = total_val_acc
+        logs["custom_loss"] = total_val_loss
+        # Writing to tensorboad logs
+        tf.summary.scalar("Custom Evaluation loss", data=total_val_loss, step=epoch)
         tf.summary.scalar(
             "Custom Evaluation Accuracy",
-            data=self.acc_metric.result().numpy(),
+            data=total_val_acc,
             step=epoch,
         )
-        print("Custom_accuracy: %.3f" % (float(self.acc_metric.result()),))
-        print(f"Custom_loss: {loss}, Epoch: {epoch}")
-        self.acc_metric.reset_states()
+        print(
+            "custom_accuracy --> %.3f" % (float(total_val_acc),),
+            f"custom_loss --> {total_val_loss}",
+        )
 
 
 def callbacks_fn(params):

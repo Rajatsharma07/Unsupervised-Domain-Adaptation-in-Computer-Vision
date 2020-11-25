@@ -83,14 +83,14 @@ def parse_args():
 
     parser.add_argument(
         "--save_weights",
-        default=False,
+        default=True,
         help="If yes, weights will be saved, otherwise not",
         type=bool,
     )
 
     parser.add_argument(
         "--save_model",
-        default=False,
+        default=True,
         help="If yes, model will be saved, otherwise not",
         type=bool,
     )
