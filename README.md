@@ -1,10 +1,10 @@
 
 # Master Thesis, University of Passau
-## Topic: Domain-Adaptation
+### Topic: Domain-Adaptation
 - In this thesis, the development of a generalizable domain adaptation model called "Deep Domain Adaptation Concatenation Network" (DDACN) is discussed, which would help to solve various computer vision tasks. The model is trained on popular visual domain datasets for image classification tasks, and its performance is evaluated compared to other available domain adaptation methods.
 -  The "Magnitude based weight pruning" technique is used to perform target feature extractor optimization.
 
-### Description about the code: 
+## Description about the code: 
 1.  **source_model.py** module defines the source models. **In Progress: 2nd Source model method will be added**
 2. **target_model.py** defines the target model.
 3. **combined_model.py** defines the merged model architecture, custom evaluation strategy and also various logging paths like tensorboard, csv, model checkpoint, etc.
@@ -19,12 +19,14 @@
 12. Models & model weights are stored at **model_data** folder.
 13. **requirements.txt** defines the libraries dependency of the experiments.
 14. Bash script **run.sh**. **In progress**
+15. **evaluation** folder shows the loss/accuracy plots, also can be viewed in Tensorboards.
 
 You may launch the program with the following command: (have a look at the main.py script for more informations about the attributes)
 
 - Activate tf environment by : **conda activate tf**
--  Monitor experiments.log for log paths.
+-  Monitor **experiments.log** for log paths and script progress.
 - Check the tensorboard logs by: tensorboard --lodir "path to  tb logs"
+- Check log.csv for model training logs.
 
 
 **python main.py  
@@ -43,8 +45,7 @@ You may launch the program with the following command: (have a look at the main.
 --use_multiGPU=False
 -- log_file=os.path.join(cn.LOGS_DIR, "experiments.log")**
 
-### Status:
-
+## Status:
  - Hyperparamter tuning for **lambda loss 2** paramater for one
    experiment, one seed value.
   - Bash script - for running multiple experiments
