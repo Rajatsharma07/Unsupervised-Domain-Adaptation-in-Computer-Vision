@@ -1,4 +1,4 @@
-from src.source_model import source_resnet
+from src.source_model import resnet_50
 from src.target_model import target_model
 from src.combined_model import merged_network, callbacks_fn, Custom_Eval
 import tensorflow as tf
@@ -12,37 +12,87 @@ from pathlib import Path
 from src.eval_helper import test_accuracy, evaluation_plots
 
 
-def train(params):
+def train_test(params):
     tf.compat.v1.logging.info("\n")
     tf.compat.v1.logging.info("Parameters: " + str(params))
-    assert params["mode"].lower() == "train", "change training mode to 'train'"
+    assert (
+        params["mode"].lower() == "train_test"
+    ), "change training mode to 'train_test'"
 
-    tf.compat.v1.logging.info("Fetched the source model: " + params["source_model"])
+    tf.compat.v1.logging.info(
+        "Fetched the source model id: " + str(params["source_model"])
+    )
+
     source_mdl = None
-    source_mdl = source_resnet((32, 32, 3))
-
-    # Call Target model
-    tf.compat.v1.logging.info("Fetched the target model: " + params["target_model"])
     target_mdl = None
-    target_mdl = target_model(input_shape=(32, 32, 3))
 
-    # Create Combined model
-    tf.compat.v1.logging.info("Building the combined model ...")
-    model = None
-    model = merged_network(
-        input_shape=(32, 32, 3),
-        source_model=source_mdl,
-        target_model=target_mdl,
-        percent=params["lambda_loss"],
-    )
+    if params["use_multiGPU"]:
+        # Create a MirroredStrategy.
+        strategy = tf.distribute.MirroredStrategy()
+        print("Number of devices: {}".format(strategy.num_replicas_in_sync))
 
-    """ Model Compilation """
-    tf.compat.v1.logging.info("Compiling the combined model ...")
-    model.compile(
-        optimizer=keras.optimizers.Adam(learning_rate=params["learning_rate"]),
-        loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-        metrics=["accuracy"],
-    )
+        # Open a strategy scope.
+        with strategy.scope():
+            if params["source_model"] == 1:
+                source_mdl = resnet_50(input_shape=(32, 32, 3), is_pretrained=False)
+            elif params["source_model"] == 2:
+                pass
+            else:
+                source_mdl = resnet_50(input_shape=(32, 32, 3), is_pretrained=True)
+
+            # Call Target model
+            tf.compat.v1.logging.info(
+                "Fetched the target model: " + params["target_model"]
+            )
+            target_mdl = target_model(input_shape=(32, 32, 3))
+
+            tf.compat.v1.logging.info("Using Mutliple GPUs for training ...")
+            # Create Combined model
+            tf.compat.v1.logging.info("Building the combined model ...")
+            model = None
+            model = merged_network(
+                input_shape=(32, 32, 3),
+                source_model=source_mdl,
+                target_model=target_mdl,
+                percent=params["lambda_loss"],
+            )
+
+            """ Model Compilation """
+            tf.compat.v1.logging.info("Compiling the combined model ...")
+            model.compile(
+                optimizer=keras.optimizers.Adam(learning_rate=params["learning_rate"]),
+                loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+                metrics=["accuracy"],
+            )
+    else:
+        if params["source_model"] == 1:
+            source_mdl = resnet_50(input_shape=(32, 32, 3), is_pretrained=False)
+        elif params["source_model"] == 2:
+            pass
+        else:
+            source_mdl = resnet_50(input_shape=(32, 32, 3), is_pretrained=True)
+
+        # Call Target model
+        tf.compat.v1.logging.info("Fetched the target model: " + params["target_model"])
+        target_mdl = target_model(input_shape=(32, 32, 3))
+
+        # Create Combined model
+        tf.compat.v1.logging.info("Building the combined model ...")
+        model = None
+        model = merged_network(
+            input_shape=(32, 32, 3),
+            source_model=source_mdl,
+            target_model=target_mdl,
+            percent=params["lambda_loss"],
+        )
+
+        """ Model Compilation """
+        tf.compat.v1.logging.info("Compiling the combined model ...")
+        model.compile(
+            optimizer=keras.optimizers.Adam(learning_rate=params["learning_rate"]),
+            loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+            metrics=["accuracy"],
+        )
 
     """ Create callbacks """
     tf.compat.v1.logging.info("Creating the callbacks ...")
@@ -90,7 +140,15 @@ def train(params):
         log_dir=log_dir,
         params=params,
     )
-    return model, hist
+
+    """ Evaluate """
+    results = model.evaluate(ds_test)
+    # print("Loss :", loss)
+    # print("Accuracy :", accuracy)
+    tf.compat.v1.logging.info(
+        f"Test Set evaluation results: \nAccuracy{results[1]}, Loss: {results[0]}"
+    )
+    return model, hist, results
 
 
 def evaluate(

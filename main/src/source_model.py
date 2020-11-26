@@ -3,10 +3,13 @@ import src.config as cn
 from tensorflow.keras import models, layers
 
 
-def source_resnet(input_shape):
-    base_model = ResNet50(
-        include_top=False, pooling=None, weights="imagenet", input_shape=input_shape
-    )
+def resnet_50(input_shape, is_pretrained=True):
+    if is_pretrained:
+        base_model = ResNet50(
+            include_top=False, pooling=None, weights="imagenet", input_shape=input_shape
+        )
+    else:
+        base_model = ResNet50(include_top=False, pooling=None, input_shape=input_shape)
     base_model.trainable = True
     predictions = layers.Conv2D(
         256,

@@ -13,4 +13,9 @@ DATASET_COMBINATION = {
     "MNIST_to_MNISTM": 1,
     "MNISTM_to_MNIST": 2,
     "GTSRB_to_SynSigns": 3,
+    "SynSigns_to_GTSRB": 4,
+}
+
+SOURCE_MODEL = {
+    "resnet_50": 1,
 }

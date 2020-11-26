@@ -3,7 +3,7 @@ import tensorflow as tf
 import src.utils as utils
 import os
 import argparse
-from src.train_eval import train, evaluate
+from src.train_eval import train_test
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 physical_devices = tf.config.list_physical_devices("GPU")
@@ -22,9 +22,9 @@ def parse_args():
 
     parser.add_argument(
         "--source_model",
-        type=str,
-        default="Resnet50",
-        help="pass source model's method name",
+        type=int,
+        default="1",
+        help="pass source model id, see the config file",
     )
     parser.add_argument(
         "--target_model",
@@ -46,34 +46,35 @@ def parse_args():
         help="pass image resizing dimension",
     )
 
-    parser.add_argument("--batch_size", default=64, help="batch size", type=int)
+    parser.add_argument("--batch_size", default=32, help="batch size", type=int)
 
     parser.add_argument(
         "--learning_rate", default=0.001, help="Learning rate", type=float
     )
 
     parser.add_argument(
-        "--mode", help="train, eval or test options", default="train", type=str
+        "--mode", help="train_test or eval options", default="train_test", type=str
     )
 
     parser.add_argument(
         "--lambda_loss", help="Additional loss lambda value", default=0.5, type=float
     )
 
-    parser.add_argument(
-        "--source_data_dir", help="Source Data path", default="", type=str
-    )
-    parser.add_argument(
-        "--target_data_dir", help="Target Data path", default="", type=str
-    )
+    # parser.add_argument(
+    #     "--source_data_dir", help="Source Data path", default="", type=str
+    # )
+    # parser.add_argument(
+    #     "--target_data_dir", help="Target Data path", default="", type=str
+    # )
 
     parser.add_argument(
         "--log_file",
-        help="File in which to redirect console outputs",
+        help="file in which to redirect console outputs",
         default=os.path.join(cn.LOGS_DIR, "experiments.log"),
         type=str,
     )
-    parser.add_argument("--epochs", default=5, help="Epochs", type=int)
+
+    parser.add_argument("--epochs", default=50, help="Epochs", type=int)
 
     parser.add_argument(
         "--save_weights",
@@ -86,6 +87,13 @@ def parse_args():
         "--save_model",
         default=True,
         help="If yes, model will be saved, otherwise not",
+        type=bool,
+    )
+
+    parser.add_argument(
+        "--use_multiGPU",
+        default=False,
+        help="If yes, multiple single host GPUs will be used, otherwise not",
         type=bool,
     )
 
@@ -102,24 +110,18 @@ def main():
 
     assert params[
         "mode"
-    ], "mode is required, please provide either train, test or eval option"
+    ], "mode is required, please provide either train_test or eval option"
 
     assert params["mode"] in [
-        "train",
-        "test",
+        "train_test",
         "eval",
-    ], "The mode must be train , test or eval"
+    ], "The mode must be train_test or eval"
 
-    if params["mode"] == "train":
-        model, hist = train(params)
+    if params["mode"] == "train_test":
+        model, hist, results = train_test(params)
 
     elif params["mode"] == "eval":
         pass
-        # evaluate(params)
-
-    # evals.test_accuracy(model, [mnistmx_test, mnistmx_test], mnisty_test_or)
-
-    # evals.test_accuracy(model, [mnistmx_test, mnistmx_test], mnisty_test_or)
 
 
 if __name__ == "__main__":

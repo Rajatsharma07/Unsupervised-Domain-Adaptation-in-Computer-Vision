@@ -131,7 +131,7 @@ def callbacks_fn(params):
     my_dir = (
         str(params["combination"])
         + "_"
-        + params["source_model"]
+        + str(params["source_model"])
         + "_"
         + str(params["sample_seed"])
     )
@@ -156,7 +156,7 @@ def callbacks_fn(params):
     tf.compat.v1.logging.info(f"Tensorboard logs path: {tb_logdir}")
 
     """CSV Logger Callback """
-    assert os.path.exists(log_dir), "CSV log path doesn't exist"
+    Path(log_dir).mkdir(parents=True, exist_ok=True)
     csv = os.path.join(log_dir, "logs.csv")
     csv_logger = CSVLogger(
         csv,
