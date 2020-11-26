@@ -1,4 +1,3 @@
-
 # Master Thesis, University of Passau
 ### Topic: Domain-Adaptation
 - In this thesis, the development of a generalizable domain adaptation model called "Deep Domain Adaptation Concatenation Network" (DDACN) is discussed, which would help to solve various computer vision tasks. The model is trained on popular visual domain datasets for image classification tasks, and its performance is evaluated compared to other available domain adaptation methods.
@@ -42,7 +41,7 @@ You may launch the program with the following command: (have a look at the main.
 --epochs=50
 --save_weights=True
 --save_model=True 
---use_multiGPU=False
+--use_multiGPU=False**
 
 ## Status:
  - Hyperparamter tuning for **lambda loss 2** paramater for one
