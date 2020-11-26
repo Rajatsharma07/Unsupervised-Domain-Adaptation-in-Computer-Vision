@@ -17,8 +17,15 @@
 10. **main.py** is the runnable script which defines various command line arguments of the experiment. **In progress mode = "eval", script is running for mode="train_test"**
 11. **logs/experiments.log** defines the script logs.
 12. Models & model weights are stored at **model_data** folder.
+13. **requirements.txt** defines the libraries dependency of the experiments.
+14. Bash script **run.sh**. **In progress**
 
 You may launch the program with the following command: (have a look at the main.py script for more informations about the attributes)
+
+- Activate tf environment by : **conda activate tf**
+-  Monitor experiments.log for log paths.
+- Check the tensorboard logs by: tensorboard --lodir "path to  tb logs"
+
 
 **python main.py  
 --combination=1
@@ -35,3 +42,11 @@ You may launch the program with the following command: (have a look at the main.
 --save_model=True 
 --use_multiGPU=False
 -- log_file=os.path.join(cn.LOGS_DIR, "experiments.log")**
+
+### Status:
+
+ - Hyperparamter tuning for **lambda loss 2** paramater for one
+   experiment, one seed value.
+  - Bash script - for running multiple experiments
+  - Source Model 2 method
+  - Model optimization phase-2 code
