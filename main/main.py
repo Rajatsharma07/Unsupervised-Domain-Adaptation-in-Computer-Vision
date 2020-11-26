@@ -67,13 +67,6 @@ def parse_args():
     #     "--target_data_dir", help="Target Data path", default="", type=str
     # )
 
-    parser.add_argument(
-        "--log_file",
-        help="file in which to redirect console outputs",
-        default=os.path.join(cn.LOGS_DIR, "experiments.log"),
-        type=str,
-    )
-
     parser.add_argument("--epochs", default=50, help="Epochs", type=int)
 
     parser.add_argument(

@@ -16,7 +16,7 @@ def merged_network(
     target_model,
     additional_loss=coral_loss,
     num_classes=10,
-    percent=0.25,
+    lambda_loss=0.25,
     feature_extractor_shape=256,
 ):
     """
@@ -76,7 +76,7 @@ def merged_network(
         model=merged_model,
         source_output=source_scores,
         target_output=target_scores,
-        percent_lambda=percent,
+        percent_lambda=lambda_loss,
     )
     merged_model.add_metric(coral_loss, name="coral_loss", aggregation="mean")
 
@@ -126,23 +126,13 @@ class Custom_Eval(tf.keras.callbacks.Callback):
         )
 
 
-def callbacks_fn(params):
+def callbacks_fn(params, my_dir):
 
-    my_dir = (
-        str(params["combination"])
-        + "_"
-        + str(params["source_model"])
-        + "_"
-        + str(params["sample_seed"])
-    )
-    print(f"Created directory: {my_dir}")
     callback_list = []
-
     """Tensorboard Callback """
-    assert os.path.exists(cn.LOGS_DIR), "LOGS_DIR doesn't exist"
+
     tb_logdir = os.path.join(cn.LOGS_DIR, my_dir)
-    if not os.path.exists(tb_logdir):
-        os.makedirs(tb_logdir)
+    Path(tb_logdir).mkdir(parents=True, exist_ok=True)
     assert os.path.exists(tb_logdir), "tb_logdir doesn't exist"
     tb_logdir = os.path.join(
         tb_logdir, datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -157,7 +147,7 @@ def callbacks_fn(params):
 
     """CSV Logger Callback """
     Path(log_dir).mkdir(parents=True, exist_ok=True)
-    csv = os.path.join(log_dir, "logs.csv")
+    csv = os.path.join(log_dir, "training_logs.csv")
     csv_logger = CSVLogger(
         csv,
         append=True,
@@ -169,9 +159,18 @@ def callbacks_fn(params):
 
     """Reduce LR Callback """
     reduce_lr_callback = tf.keras.callbacks.ReduceLROnPlateau(
-        monitor="val_accuracy", factor=0.2, patience=1, min_lr=0.000001
+        monitor="val_accuracy", factor=0.4, patience=2, min_lr=0.000001
     )
     callback_list.append(reduce_lr_callback)
+
+    """Early Stopping Callback """
+    early_stopping_callback = tf.keras.callbacks.EarlyStopping(
+        monitor="val_loss",
+        patience=5,
+        verbose=1,
+        mode="auto",
+    )
+    callback_list.append(early_stopping_callback)
 
     """Checkpoint Callback """
     if params["save_weights"]:

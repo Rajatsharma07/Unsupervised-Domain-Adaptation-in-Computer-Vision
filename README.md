@@ -43,7 +43,6 @@ You may launch the program with the following command: (have a look at the main.
 --save_weights=True
 --save_model=True 
 --use_multiGPU=False
--- log_file=os.path.join(cn.LOGS_DIR, "experiments.log")**
 
 ## Status:
  - Hyperparamter tuning for **lambda loss 2** paramater for one

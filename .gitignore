@@ -142,6 +142,9 @@ input/
 .vscode/
 data/
 logs/
+model_data/
+evaluation/
+
 
 # data files
 *.csv

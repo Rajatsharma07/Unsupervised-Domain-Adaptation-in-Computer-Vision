@@ -13,6 +13,19 @@ from src.eval_helper import test_accuracy, evaluation_plots
 
 
 def train_test(params):
+
+    my_dir = (
+        str(params["combination"])
+        + "_"
+        + str(params["source_model"])
+        + "_"
+        + str(params["sample_seed"])
+    )
+
+    assert os.path.exists(cn.LOGS_DIR), "LOGS_DIR doesn't exist"
+    experiment_logs_path = os.path.join(cn.LOGS_DIR, my_dir)
+    Path(experiment_logs_path).mkdir(parents=True, exist_ok=True)
+    utils.define_logger(os.path.join(experiment_logs_path, "experiments.log"))
     tf.compat.v1.logging.info("\n")
     tf.compat.v1.logging.info("Parameters: " + str(params))
     assert (
@@ -54,7 +67,7 @@ def train_test(params):
                 input_shape=(32, 32, 3),
                 source_model=source_mdl,
                 target_model=target_mdl,
-                percent=params["lambda_loss"],
+                lambda_loss=params["lambda_loss"],
             )
 
             """ Model Compilation """
@@ -83,7 +96,7 @@ def train_test(params):
             input_shape=(32, 32, 3),
             source_model=source_mdl,
             target_model=target_mdl,
-            percent=params["lambda_loss"],
+            lambda_loss=params["lambda_loss"],
         )
 
         """ Model Compilation """
@@ -96,7 +109,7 @@ def train_test(params):
 
     """ Create callbacks """
     tf.compat.v1.logging.info("Creating the callbacks ...")
-    callbacks, log_dir = callbacks_fn(params)
+    callbacks, log_dir = callbacks_fn(params, my_dir)
 
     plot_model(source_mdl, os.path.join(log_dir, "source_model.png"), show_shapes=True)
     plot_model(target_mdl, os.path.join(log_dir, "target_model.png"), show_shapes=True)
@@ -141,12 +154,10 @@ def train_test(params):
         params=params,
     )
 
-    """ Evaluate """
+    """ Evaluate on Target Dataset"""
     results = model.evaluate(ds_test)
-    # print("Loss :", loss)
-    # print("Accuracy :", accuracy)
     tf.compat.v1.logging.info(
-        f"Test Set evaluation results: \nAccuracy{results[1]}, Loss: {results[0]}"
+        f"Test Set evaluation results for run {Path(log_dir).name} : Accuracy: {results[1]}, Loss: {results[0]}"
     )
     return model, hist, results
 
