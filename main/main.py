@@ -99,8 +99,6 @@ def main():
     params = vars(args)
     print(params)
 
-    utils.define_logger(params["log_file"])
-
     assert params[
         "mode"
     ], "mode is required, please provide either train_test or eval option"

@@ -62,7 +62,7 @@ def loss_accuracy_plots(
         cn.EVALUATION, (Path(log_dir).parent).name, Path(log_dir).name
     )
     Path(plot_path).mkdir(parents=True, exist_ok=True)
-    tf.compat.v1.logging.info(f"Plots created at {plot_path}")
+    tf.compat.v1.logging.info("Plots created at: " + plot_path)
     plot_path = os.path.join(plot_path, "Accuracy_Loss_Plots.png")
     plt.savefig(plot_path)
     plt.show()
@@ -105,7 +105,7 @@ def plot_UMAP(
     alpha=0.6,
     height=9,
     palette="muted",
-) -> None:
+):
     """[summary]
 
     Arguments:
@@ -136,7 +136,7 @@ def plot_UMAP(
     ).add_legend()
 
 
-def model_layers(model) -> None:
+def model_layers(model):
     """[Shows the layers inside a model and confirm it's trainable or not]
 
     Args:
