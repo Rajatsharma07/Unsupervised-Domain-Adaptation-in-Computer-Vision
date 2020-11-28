@@ -1,34 +1,21 @@
 #! /usr/bin/env bash
 
+# python main.py
+# --combination=1 --source_model=1 --target_model="target_model" --batch_size=32 --resize=32 --learning_rate=0.001 --mode="train_test" --lamb da_loss=0.5
+# --epochs=50 --save_weights=True --save_model=True --use_multiGPU=False
 
-combinations=(ds1 ds2 ds3) 
-models=(s1 s2)
-seeds=(s1 s2 s3)
+# seeds=(400, 1000, 250)
+# losses=(0.25, 0.50, 0.75, 1)
 
-for comb in ${combinations[@]}; do
-    for model in ${models[@]}; do
-        for seed in ${seeds[@]}; do
-            # python3 main.py --combination "$comb" --source_model "$model" --sample_seed "$seed"
-            echo "python3 main.py --combination $comb --source_model $model --sample_seed $seed --method --lsave"
-        done
-    done
-    email "results for ds1" result-ds1
-done
 
-email "phase done"
+# for loss in ${losses[@]}; do
+#     for index in $(seq 1 3); do
+#         echo "python3 main/main.py --lambda_loss="$loss" --batch_size=64"
+#         python3 main/main.py --lambda_loss=$loss --batch_size=64
+#     done
+# done
 
-for comb in ${combinations[]}; do
-    for dir in "$comb*"; do
-        results-ds1.csv
-        sort -k2,2 -k2,1 readline "$dir/csv.csv"
-         done
-         done
 
-email "results generated " <<< files
-results.csv
-
-test1=(1 2 3 4 5)
-
-email "model save"
-while val <<< readline  results.csv
-    for tests in ${tests[@]}; done
+python3 main/main.py --lambda_loss=1 --batch_size=64
+python3 main/main.py --lambda_loss=1 --batch_size=64
+python3 main/main.py --lambda_loss=1 --batch_size=64

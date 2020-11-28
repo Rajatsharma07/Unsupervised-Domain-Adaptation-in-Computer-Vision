@@ -1,6 +1,4 @@
-import src.config as cn
 import tensorflow as tf
-import src.utils as utils
 import os
 import argparse
 from src.train_eval import train_test
@@ -32,12 +30,12 @@ def parse_args():
         default="target_model",
         help="pass target model's method name",
     )
-    parser.add_argument(
-        "--sample_seed",
-        type=int,
-        default=500,
-        help="pass the seed value for shuffling target dataset",
-    )
+    # parser.add_argument(
+    #     "--sample_seed",
+    #     type=int,
+    #     default=500,
+    #     help="pass the seed value for shuffling target dataset",
+    # )
 
     parser.add_argument(
         "--resize",

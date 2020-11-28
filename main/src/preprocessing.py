@@ -7,8 +7,8 @@ from src.utils import extract_mnist_m
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
 
-def shuffle_dataset(data_x, data_Y, seed_val):
-    np.random.seed(seed_val)
+def shuffle_dataset(data_x, data_Y):
+    # np.random.seed(seed_val)
     index_shuffled = np.arange(data_x.shape[0])
     np.random.shuffle(index_shuffled)
     data_x = np.array(data_x)
@@ -61,9 +61,7 @@ def fetch_data(params):
         (mnistx_train, mnisty_train), (_, _) = tf.keras.datasets.mnist.load_data()
 
         mnistmx_train, _ = extract_mnist_m(cn.MNIST_M_PATH)
-        mnistmx_train, mnistmy_train = shuffle_dataset(
-            mnistmx_train, mnisty_train, params["sample_seed"]
-        )
+        mnistmx_train, mnistmy_train = shuffle_dataset(mnistmx_train, mnisty_train)
         ds_train = tf.data.Dataset.from_tensor_slices(
             ((mnistx_train, mnistmx_train), mnisty_train)
         )
@@ -141,9 +139,7 @@ def fetch_data(params):
         mnistmx_train, _ = extract_mnist_m("/root/Master-Thesis/data/keras_mnistm.pkl")
         mnistmy_train = mnisty_train
 
-        mnistx_train, mnisty_train = shuffle_dataset(
-            mnistx_train, mnisty_train, params["sample_seed"]
-        )
+        mnistx_train, mnisty_train = shuffle_dataset(mnistx_train, mnisty_train)
 
         ds_train = tf.data.Dataset.from_tensor_slices(
             (mnistmx_train, mnistx_train, mnistmy_train)

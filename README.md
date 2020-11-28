@@ -32,7 +32,6 @@ You may launch the program with the following command: (have a look at the main.
 --combination=1
 --source_model=1
 --target_model="target_model"
---sample_seed=500
 --batch_size=32 
 --resize=32
 --learning_rate=0.001

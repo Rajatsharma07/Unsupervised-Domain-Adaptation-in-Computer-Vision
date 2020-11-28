@@ -142,8 +142,10 @@ input/
 .vscode/
 data/
 logs/
-model_data/
+model_data/assets/
+model_data/variables/
 evaluation/
+variables/
 
 
 # data files
@@ -153,6 +155,7 @@ evaluation/
 *.pth 
 *.npy
 *.hdf5
+*.pb
 
 # Flake 8 file
 .flake8

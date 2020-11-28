@@ -19,7 +19,7 @@ def train_test(params):
         + "_"
         + str(params["source_model"])
         + "_"
-        + str(params["sample_seed"])
+        + str(params["lambda_loss"])
     )
 
     assert os.path.exists(cn.LOGS_DIR), "LOGS_DIR doesn't exist"
