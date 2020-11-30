@@ -6,6 +6,8 @@ import src.config as cn
 from src.loss import coral_loss
 import datetime
 import os
+from src.source_model import resnet_50
+from src.arget_model import target_model
 from tensorflow.keras.callbacks import CSVLogger
 from pathlib import Path
 
@@ -196,3 +198,14 @@ def callbacks_fn(params, my_dir):
         tf.compat.v1.logging.info(f"Model Checkpoint path: {checkpoint_path}")
 
     return callback_list, log_dir
+
+
+if __name__ == "__main__":
+    source_mdl = resnet_50(input_shape=(32, 32, 3), is_pretrained=False)
+    target_mdl = target_model(input_shape=(32, 32, 3))
+    model = merged_network(
+        input_shape=(32, 32, 3),
+        source_model=source_mdl,
+        target_model=target_mdl,
+    )
+    print(target_mdl.summary())

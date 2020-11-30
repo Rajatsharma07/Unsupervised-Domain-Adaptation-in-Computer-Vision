@@ -126,3 +126,8 @@ def target_model(input_shape=(64, 64, 3)):
     model = models.Model(inputs=in_2, outputs=out2, name="Target_Model")
 
     return model
+
+
+if __name__ == "__main__":
+    target_mdl = target_model(input_shape=(32, 32, 3))
+    print(target_mdl.summary())

@@ -22,3 +22,8 @@ def resnet_50(input_shape, is_pretrained=True):
         inputs=base_model.inputs, outputs=predictions, name="Source_Model"
     )
     return model
+
+
+if __name__ == "__main__":
+    source_mdl = resnet_50(input_shape=(32, 32, 3), is_pretrained=False)
+    print(source_mdl.summary())

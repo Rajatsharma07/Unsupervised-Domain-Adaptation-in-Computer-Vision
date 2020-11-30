@@ -115,20 +115,16 @@ def fetch_data(params):
             .prefetch(cn.AUTOTUNE)
         )
 
-        count = 0
-        for x in ds_train:
-            count += 1
-        print(f"\n Batches count of MNIST train set: {count}\n")
+        source_count = [x for x in ds_train]
+        tf.compat.v1.logging.info(
+            "Batch count of source training set: " + str(len(source_count))
+        )
 
-        count = 0
-        for x in ds_custom_val:
-            count += 1
-        print(f"\n Batches Count of MNISTM custom val set: {count}\n")
+        test_count = [x for x in ds_test]
+        tf.compat.v1.logging.info("Batch count of test set: " + str(len(test_count)))
 
-        count = 0
-        for x in ds_test:
-            count += 1
-        print(f"\n Batches Count of MNISTM test set: {count}\n")
+        val_count = [x for x in ds_custom_val]
+        tf.compat.v1.logging.info("Batch count of val set: " + str(len(val_count)))
 
         return ds_train, ds_custom_val, ds_test
 
@@ -142,43 +138,53 @@ def fetch_data(params):
         mnistx_train, mnisty_train = shuffle_dataset(mnistx_train, mnisty_train)
 
         ds_train = tf.data.Dataset.from_tensor_slices(
-            (mnistmx_train, mnistx_train, mnistmy_train)
+            ((mnistmx_train, mnistx_train), mnistmy_train)
         )
 
-        ds_test = tf.data.Dataset.from_tensor_slices((mnistx_train, mnisty_train))
+        ds_test = tf.data.Dataset.from_tensor_slices(
+            ((mnistx_train, mnistx_train), mnisty_train)
+        )
 
         # Read the data
         # Setup for train dataset
         ds_train = (
             ds_train.map(
-                (lambda x, y, z: augment(x, y, z, params["resize"], False, True)),
+                (lambda x, y: augment(x[0], x[1], y, params["resize"], False, True)),
                 num_parallel_calls=cn.AUTOTUNE,
             )
             .cache()
-            .shuffle(mnisty_train.shape[0])
             .batch(params["batch_size"])
             .prefetch(cn.AUTOTUNE)
+            # .shuffle(mnisty_train.shape[0])
         )
+
         # Setup for test Dataset
         ds_test = (
             ds_test.map(
-                (lambda x, y: resize_and_rescale(x, y, params["resize"], True)),
+                (
+                    lambda x, y: (
+                        (
+                            resize_and_rescale(x[0], params["resize"], True),
+                            resize_and_rescale(x[1], params["resize"], True),
+                        ),
+                        y,
+                    )
+                ),
                 num_parallel_calls=cn.AUTOTUNE,
             )
             .batch(params["batch_size"])
             .prefetch(cn.AUTOTUNE)
         )
-        count = 0
-        for x in ds_train:
-            count += 1
-        print(f"\n Batches count of MNISTM train: {count}\n")
 
-        count = 0
-        for x in ds_test:
-            count += 1
-        print(f"\n Batches Count of MNIST test: {count}\n")
+        source_count = [x for x in ds_train]
+        tf.compat.v1.logging.info(
+            "Batch count of training set: " + str(len(source_count))
+        )
 
-        return ds_train, ds_test
+        test_count = [x for x in ds_test]
+        tf.compat.v1.logging.info("Batch count of test set: " + str(len(test_count)))
+
+        return ds_train, _, ds_test
 
     elif params["combination"] == 3:
         pass

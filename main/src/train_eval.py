@@ -118,10 +118,10 @@ def train_test(params):
     tf.compat.v1.logging.info("Calling data preprocessing pipeline...")
     ds_train, ds_val, ds_test = fetch_data(params)
 
-    """ Custom Evauation Callback """
-    tf.compat.v1.logging.info("Creating custom evaluation callback...")
-    custom_eval = Custom_Eval(ds_val)
-    callbacks[:0] = [custom_eval]
+    # """ Custom Evauation Callback """
+    # tf.compat.v1.logging.info("Creating custom evaluation callback...")
+    # custom_eval = Custom_Eval(ds_val)
+    # callbacks[:0] = [custom_eval]
 
     """ Model Training """
     tf.compat.v1.logging.info("Training Started....")

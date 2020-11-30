@@ -1,7 +1,7 @@
 import tensorflow as tf
 import os
 import argparse
-from src.train_eval import train_test
+from src import train_eval as te
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 physical_devices = tf.config.list_physical_devices("GPU")
@@ -107,7 +107,7 @@ def main():
     ], "The mode must be train_test or eval"
 
     if params["mode"] == "train_test":
-        model, hist, results = train_test(params)
+        model, hist, results = te.train_test(params)
 
     elif params["mode"] == "eval":
         pass
