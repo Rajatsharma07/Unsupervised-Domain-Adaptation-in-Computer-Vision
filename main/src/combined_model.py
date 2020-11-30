@@ -7,7 +7,7 @@ from src.loss import coral_loss
 import datetime
 import os
 from src.source_model import resnet_50
-from src.arget_model import target_model
+from src.target_model import target_model
 from tensorflow.keras.callbacks import CSVLogger
 from pathlib import Path
 
