@@ -132,7 +132,7 @@ def fetch_data(params):
 
         (mnistx_train, mnisty_train), (_, _) = tf.keras.datasets.mnist.load_data()
 
-        mnistmx_train, _ = extract_mnist_m("/root/Master-Thesis/data/keras_mnistm.pkl")
+        mnistmx_train, _ = extract_mnist_m(cn.MNIST_M_PATH)
         mnistmy_train = mnisty_train
 
         mnistx_train, mnisty_train = shuffle_dataset(mnistx_train, mnisty_train)
