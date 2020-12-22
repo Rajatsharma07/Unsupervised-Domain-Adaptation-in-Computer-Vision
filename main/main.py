@@ -1,7 +1,7 @@
 import tensorflow as tf
 import os
 import argparse
-from src import train_eval as te
+from src import train_test as te
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 physical_devices = tf.config.list_physical_devices("GPU")
@@ -19,23 +19,11 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--source_model",
+        "--model_mode",
         type=int,
-        default="1",
-        help="pass source model id, see the config file",
+        default="0",
+        help="0 means SIMAESE network, otherwise seperate",
     )
-    parser.add_argument(
-        "--target_model",
-        type=str,
-        default="target_model",
-        help="pass target model's method name",
-    )
-    # parser.add_argument(
-    #     "--sample_seed",
-    #     type=int,
-    #     default=500,
-    #     help="pass the seed value for shuffling target dataset",
-    # )
 
     parser.add_argument(
         "--resize",
@@ -69,7 +57,7 @@ def parse_args():
 
     parser.add_argument(
         "--save_weights",
-        default=True,
+        default=False,
         help="If yes, weights will be saved, otherwise not",
         type=bool,
     )

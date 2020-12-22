@@ -1,18 +1,12 @@
-import pandas as pd
-import seaborn as sn
 import tensorflow as tf
-import numpy as np
 import matplotlib.pyplot as plt
-import umap
-import h5py
 import src.config as cn
 import os
-import io
-import sklearn.metrics
-from functools import reduce
 import logging
 import pickle
 from pathlib import Path
+from tensorflow.keras.callbacks import CSVLogger
+import datetime
 
 
 def define_logger(log_file):
@@ -96,167 +90,73 @@ def extract_mnist_m(mnistm_path):
     return mnistmx_train, mnistmx_test
 
 
-def plot_UMAP(
-    input_data,
-    input_labels,
-    n_neighbors=5,
-    min_dist=0.3,
-    metric="correlation",
-    alpha=0.6,
-    height=9,
-    palette="muted",
-):
-    """[summary]
+def callbacks_fn(params, my_dir):
 
-    Arguments:
-        input_data {[type]} -- [description]
-        input_labels {[type]} -- [description]
+    callback_list = []
+    """Tensorboard Callback """
 
-    Keyword Arguments:
-        n_neighbors {int} -- [description] (default: {5})
-        min_dist {float} -- [description] (default: {0.3})
-        metric {str} -- [description] (default: {"correlation"})
-        alpha {float} -- [description] (default: {0.6})
-        height {int} -- [description] (default: {9})
-        palette {str} -- [description] (default: {"muted"})
-    """
-    embedding = umap.UMAP(
-        n_neighbors=n_neighbors, min_dist=min_dist, metric=metric, random_state=5
-    ).fit_transform(input_data)
-    print("shape of umap_reduced.shape = ", embedding.shape)
-    # attaching the label for each 2-d data point
-    # creating a new data fram which help us in ploting the result data
-    umap_data = np.vstack((embedding.T, input_labels)).T
-    umap_df = pd.DataFrame(data=umap_data, columns=("Dim_1", "Dim_2", "Digits"))
-    umap_df["Digits"] = umap_df["Digits"].astype(int)
-    sn.set(style="whitegrid")
-    plt.style.use("dark_background")
-    sn.FacetGrid(umap_df, hue="Digits", height=height, palette=palette).map(
-        plt.scatter, "Dim_1", "Dim_2", alpha=alpha
-    ).add_legend()
-
-
-def model_layers(model):
-    """[Shows the layers inside a model and confirm it's trainable or not]
-
-    Args:
-        model ([Keras mode]): [created keras model]
-    """
-    for layers in model.layers:
-        print(f"Layer Name: {layers.name} \t Trainable: {layers.trainable} ")
-
-
-def hdf5(path, data_key="data", target_key="target", flatten=True):
-    """
-    loads data from hdf5:
-    - hdf5 should have 'train' and 'test' groups
-    - each group should have 'data' and 'target' dataset or spcify the key
-    - flatten means to flatten images N * (C * H * W) as N * D array
-    """
-    with h5py.File(path, "r") as hf:
-        train = hf.get("train")
-        X_tr = train.get(data_key)[:]
-        y_tr = train.get(target_key)[:]
-        test = hf.get("test")
-        X_te = test.get(data_key)[:]
-        y_te = test.get(target_key)[:]
-        if flatten:
-            X_tr = X_tr.reshape(
-                X_tr.shape[0], reduce(lambda a, b: a * b, X_tr.shape[1:])
-            )
-            X_te = X_te.reshape(
-                X_te.shape[0], reduce(lambda a, b: a * b, X_te.shape[1:])
-            )
-    return X_tr, y_tr, X_te, y_te
-
-
-def plot_to_image(figure):
-    """Converts the matplotlib plot specified by 'figure' to a PNG image and
-    returns it. The supplied figure is closed and inaccessible after this call."""
-
-    # Save the plot to a PNG in memory.
-    buf = io.BytesIO()
-    plt.savefig(buf, format="png")
-
-    # Closing the figure prevents it from being displayed directly inside
-    # the notebook.
-    plt.close(figure)
-    buf.seek(0)
-
-    # Convert PNG buffer to TF image
-    image = tf.image.decode_png(buf.getvalue(), channels=4)
-
-    # Add the batch dimension
-    image = tf.expand_dims(image, 0)
-    return image
-
-
-def image_grid(data, labels, class_names):
-    # Data should be in (BATCH_SIZE, H, W, C)
-    assert data.ndim == 4
-
-    figure = plt.figure(figsize=(10, 10))
-    num_images = data.shape[0]
-    size = int(np.ceil(np.sqrt(num_images)))
-
-    for i in range(data.shape[0]):
-        plt.subplot(size, size, i + 1, title=class_names[labels[i]])
-        plt.xticks([])
-        plt.yticks([])
-        plt.grid(False)
-
-        # if grayscale
-        if data.shape[3] == 1:
-            plt.imshow(data[i], cmap=plt.cm.binary)
-
-        else:
-            plt.imshow(data[i])
-
-    return figure
-
-
-def get_confusion_matrix(y_labels, logits, class_names):
-    preds = np.argmax(logits, axis=1)
-    cm = sklearn.metrics.confusion_matrix(
-        y_labels,
-        preds,
-        labels=np.arange(len(class_names)),
+    tb_logdir = os.path.join(cn.LOGS_DIR, my_dir)
+    Path(tb_logdir).mkdir(parents=True, exist_ok=True)
+    assert os.path.exists(tb_logdir), "tb_logdir doesn't exist"
+    tb_logdir = os.path.join(
+        tb_logdir, datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     )
+    log_dir = tb_logdir
+    # file_writer = tf.summary.create_file_writer(tb_logdir + "/custom_evaluation")
+    # file_writer.set_as_default()
+    tensorboard_callback = tf.keras.callbacks.TensorBoard(tb_logdir, histogram_freq=1)
+    callback_list.append(tensorboard_callback)
+    # print(f"\nTensorboard logs path: {tb_logdir}\n")
+    tf.compat.v1.logging.info(f"Tensorboard logs path: {tb_logdir}")
 
-    return cm
-
-
-def plot_confusion_matrix(cm, class_names):
-    size = len(class_names)
-    figure = plt.figure(figsize=(size, size))
-    plt.imshow(cm, interpolation="nearest", cmap=plt.cm.Blues)
-    plt.title("Confusion Matrix")
-
-    indices = np.arange(len(class_names))
-    plt.xticks(indices, class_names, rotation=45)
-    plt.yticks(indices, class_names)
-
-    # Normalize Confusion Matrix
-    cm = np.around(
-        cm.astype("float") / cm.sum(axis=1)[:, np.newaxis],
-        decimals=3,
+    """CSV Logger Callback """
+    Path(log_dir).mkdir(parents=True, exist_ok=True)
+    csv = os.path.join(log_dir, "training_logs.csv")
+    csv_logger = CSVLogger(
+        csv,
+        append=True,
+        separator=";",
     )
+    # print(f"\nModel CSV logs path: {csv}\n")
+    tf.compat.v1.logging.info(f"Model CSV logs path: {csv}")
+    callback_list.append(csv_logger)
 
-    threshold = cm.max() / 2.0
-    for i in range(size):
-        for j in range(size):
-            color = "white" if cm[i, j] > threshold else "black"
-            plt.text(
-                i,
-                j,
-                cm[i, j],
-                horizontalalignment="center",
-                color=color,
-            )
+    """Reduce LR Callback """
+    reduce_lr_callback = tf.keras.callbacks.ReduceLROnPlateau(
+        monitor="val_accuracy", factor=0.4, patience=2, min_lr=0.000001
+    )
+    callback_list.append(reduce_lr_callback)
 
-    plt.tight_layout()
-    plt.xlabel("True Label")
-    plt.ylabel("Predicted label")
+    """Early Stopping Callback """
+    early_stopping_callback = tf.keras.callbacks.EarlyStopping(
+        monitor="val_loss",
+        patience=15,
+        verbose=1,
+        mode="auto",
+    )
+    callback_list.append(early_stopping_callback)
 
-    cm_image = plot_to_image(figure)
-    return cm_image
+    """Checkpoint Callback """
+    if params["save_weights"]:
+        assert os.path.exists(cn.MODEL_PATH), "MODEL_PATH doesn't exist"
+        checkpoint_path = os.path.join(
+            cn.MODEL_PATH, (Path(log_dir).parent).name, Path(log_dir).name
+        )
+        Path(checkpoint_path).mkdir(parents=True, exist_ok=True)
+        assert os.path.exists(checkpoint_path), "checkpoint_path doesn't exist"
+        checkpoint_path = os.path.join(
+            checkpoint_path,
+            "weights.{epoch:02d}-{val_accuracy:.2f}.hdf5",
+        )
+        cp_callback = tf.keras.callbacks.ModelCheckpoint(
+            filepath=checkpoint_path,
+            save_weights_only=True,
+            save_best_only=True,
+            verbose=1,
+            monitor="val_accuracy",
+        )
+        callback_list.append(cp_callback)
+        # print(f"\nModel Checkpoint path: {checkpoint_path}\n")
+        tf.compat.v1.logging.info(f"Model Checkpoint path: {checkpoint_path}")
+
+    return callback_list, log_dir

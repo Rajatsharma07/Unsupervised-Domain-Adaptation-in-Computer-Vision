@@ -16,6 +16,6 @@ DATASET_COMBINATION = {
     "GTSRB_to_SynSigns": 4,
 }
 
-SOURCE_MODEL = {
-    "resnet_50": 1,
+MODEL = {
+    "VGG16_model": 1,
 }
