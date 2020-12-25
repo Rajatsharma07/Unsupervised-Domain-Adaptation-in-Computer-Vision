@@ -41,9 +41,7 @@ def train_test(params):
             model = None
             tf.compat.v1.logging.info("Using Mutliple GPUs for training ...")
             tf.compat.v1.logging.info("Building the model ...")
-            model = DeepCORAL(
-                input_shape=(32, 32, 3), is_pretrained=False, num_classes=10
-            )
+            model = DeepCORAL(input_shape=(32, 32, 3), num_classes=10)
 
             """ Model Compilation """
             tf.compat.v1.logging.info("Compiling the model ...")
@@ -56,12 +54,12 @@ def train_test(params):
         # Create model
         tf.compat.v1.logging.info("Building the model ...")
         model = None
-        model = DeepCORAL(input_shape=(32, 32, 3), is_pretrained=False, num_classes=10)
+        model = DeepCORAL(input_shape=(32, 32, 3), num_classes=10)
 
         """ Model Compilation """
         tf.compat.v1.logging.info("Compiling the model ...")
         model.compile(
-            optimizer=keras.optimizers.Adam(learning_rate=params["learning_rate"]),
+            optimizer=keras.optimizers.Nadam(learning_rate=params["learning_rate"]),
             loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
             metrics=["accuracy"],
         )

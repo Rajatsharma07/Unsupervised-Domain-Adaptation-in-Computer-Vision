@@ -21,8 +21,8 @@ def parse_args():
     parser.add_argument(
         "--model_mode",
         type=int,
-        default="0",
-        help="0 means SIMAESE network, otherwise seperate",
+        default="1",
+        help="1 means SIAMESE network, otherwise seperate",
     )
 
     parser.add_argument(
@@ -32,7 +32,7 @@ def parse_args():
         help="pass image resizing dimension",
     )
 
-    parser.add_argument("--batch_size", default=32, help="batch size", type=int)
+    parser.add_argument("--batch_size", default=64, help="batch size", type=int)
 
     parser.add_argument(
         "--learning_rate", default=0.001, help="Learning rate", type=float
@@ -43,7 +43,7 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--lambda_loss", help="Additional loss lambda value", default=0.5, type=float
+        "--lambda_loss", help="Additional loss lambda value", default=1, type=float
     )
 
     # parser.add_argument(
@@ -53,7 +53,7 @@ def parse_args():
     #     "--target_data_dir", help="Target Data path", default="", type=str
     # )
 
-    parser.add_argument("--epochs", default=50, help="Epochs", type=int)
+    parser.add_argument("--epochs", default=40, help="Epochs", type=int)
 
     parser.add_argument(
         "--save_weights",
