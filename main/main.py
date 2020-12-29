@@ -19,10 +19,10 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--model_mode",
+        "--loss",
         type=int,
         default="1",
-        help="1 means SIAMESE network, otherwise seperate",
+        help="1 CORAL, see config file",
     )
 
     parser.add_argument(
@@ -43,17 +43,14 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--lambda_loss", help="Additional loss lambda value", default=1, type=float
+        "--lambda_loss", help="Additional loss lambda value", default=0.75, type=float
+    )
+    
+   parser.add_argument(
+        "--prune", help="Target model will be optimized", default=False, type=bool
     )
 
-    # parser.add_argument(
-    #     "--source_data_dir", help="Source Data path", default="", type=str
-    # )
-    # parser.add_argument(
-    #     "--target_data_dir", help="Target Data path", default="", type=str
-    # )
-
-    parser.add_argument("--epochs", default=40, help="Epochs", type=int)
+    parser.add_argument("--epochs", default=5, help="Epochs", type=int)
 
     parser.add_argument(
         "--save_weights",

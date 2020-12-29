@@ -1,4 +1,4 @@
-from src.models import DeepCORAL
+from src.models import merged_model
 import tensorflow as tf
 from tensorflow import keras
 from src.preprocessing import fetch_data
@@ -7,6 +7,7 @@ from tensorflow.keras.utils import plot_model
 import os
 import src.config as cn
 from pathlib import Path
+from src.loss import CORAL, kl_divergence
 
 
 def train_test(params):
@@ -14,7 +15,7 @@ def train_test(params):
     my_dir = (
         str(params["combination"])
         + "_"
-        + str(params["model_mode"])
+        + str(params["loss"])
         + "_"
         + str(params["lambda_loss"])
     )
@@ -29,7 +30,7 @@ def train_test(params):
         params["mode"].lower() == "train_test"
     ), "change training mode to 'train_test'"
 
-    tf.compat.v1.logging.info("Fetched the model model: " + str(params["model_mode"]))
+    tf.compat.v1.logging.info("Fetched the loss function: " + cn.Loss[params["loss"]])
 
     if params["use_multiGPU"]:
         # Create a MirroredStrategy.
@@ -41,8 +42,16 @@ def train_test(params):
             model = None
             tf.compat.v1.logging.info("Using Mutliple GPUs for training ...")
             tf.compat.v1.logging.info("Building the model ...")
-            model = DeepCORAL(input_shape=(32, 32, 3), num_classes=10)
 
+            model = merged_model(
+                input_shape=(32, 32, 3),
+                num_classes=10,
+                lambda_loss=params["lambda_loss"],
+                additional_loss=CORAL,
+                prune=params["prune"],
+            )
+
+            print(model.summary())
             """ Model Compilation """
             tf.compat.v1.logging.info("Compiling the model ...")
             model.compile(
@@ -53,9 +62,17 @@ def train_test(params):
     else:
         # Create model
         tf.compat.v1.logging.info("Building the model ...")
-        model = None
-        model = DeepCORAL(input_shape=(32, 32, 3), num_classes=10)
 
+        model = None
+
+        model = merged_model(
+            input_shape=(32, 32, 3),
+            num_classes=10,
+            lambda_loss=params["lambda_loss"],
+            additional_loss=CORAL,
+        )
+
+        print(model.summary())
         """ Model Compilation """
         tf.compat.v1.logging.info("Compiling the model ...")
         model.compile(
@@ -81,9 +98,16 @@ def train_test(params):
         epochs=params["epochs"],
         verbose=2,
         callbacks=callbacks,
-        # batch_size=params["batch_size"],
     )
     tf.compat.v1.logging.info("Training finished....")
+
+    """ Plotting """
+    tf.compat.v1.logging.info("Creating accuracy & loss plots...")
+    utils.loss_accuracy_plots(
+        hist=hist,
+        log_dir=log_dir,
+        params=params,
+    )
 
     """ Model Saving """
     if params["save_model"]:
@@ -94,14 +118,6 @@ def train_test(params):
         Path(model_path).mkdir(parents=True, exist_ok=True)
         model.save(model_path)
         tf.compat.v1.logging.info(f"Model successfully saved at: {model_path}")
-
-    """ Plotting """
-    tf.compat.v1.logging.info("Creating accuracy & loss plots...")
-    utils.loss_accuracy_plots(
-        hist=hist,
-        log_dir=log_dir,
-        params=params,
-    )
 
     """ Evaluate on Target Dataset"""
     results = model.evaluate(ds_test)

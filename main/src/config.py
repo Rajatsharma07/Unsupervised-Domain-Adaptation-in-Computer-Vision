@@ -1,5 +1,6 @@
 import tensorflow as tf
 from pathlib import Path
+import tensorflow_model_optimization as tfmot
 
 initializer = tf.keras.initializers.he_normal()  # Layer initializations
 
@@ -16,6 +17,10 @@ DATASET_COMBINATION = {
     "GTSRB_to_SynSigns": 4,
 }
 
-MODEL = {
-    "VGG16_model": 1,
+Loss = {1: "CORAL", 2: "Other"}
+
+pruning_params = {
+    "pruning_schedule": tfmot.sparsity.keras.ConstantSparsity(
+        0.20, 0, end_step=-1, frequency=1
+    )
 }

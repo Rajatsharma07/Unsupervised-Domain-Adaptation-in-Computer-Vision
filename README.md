@@ -29,7 +29,7 @@ You may launch the program with the following command: (have a look at the main.
 
 **python main.py  
 --combination=1
---model_mode=0
+--loss=1
 --batch_size=32 
 --resize=32
 --learning_rate=0.001
