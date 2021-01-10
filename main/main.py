@@ -43,14 +43,14 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--lambda_loss", help="Additional loss lambda value", default=0.75, type=float
+        "--lambda_loss", help="Additional loss lambda value", default=8, type=float
     )
-    
-   parser.add_argument(
+
+    parser.add_argument(
         "--prune", help="Target model will be optimized", default=False, type=bool
     )
 
-    parser.add_argument("--epochs", default=5, help="Epochs", type=int)
+    parser.add_argument("--epochs", default=15, help="Epochs", type=int)
 
     parser.add_argument(
         "--save_weights",

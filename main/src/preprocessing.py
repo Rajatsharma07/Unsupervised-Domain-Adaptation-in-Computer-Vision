@@ -140,7 +140,7 @@ def fetch_data(params):
         ds_train = tf.data.Dataset.from_tensor_slices(
             ((mnistmx_train, mnistx_train), mnistmy_train)
         )
-
+ 
         ds_test = tf.data.Dataset.from_tensor_slices(
             ((mnistx_train, mnistx_train), mnisty_train)
         )

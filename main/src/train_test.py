@@ -7,7 +7,7 @@ from tensorflow.keras.utils import plot_model
 import os
 import src.config as cn
 from pathlib import Path
-from src.loss import CORAL, kl_divergence
+from src.loss import CORAL, kl_divergence, coral_loss
 
 
 def train_test(params):
@@ -55,7 +55,7 @@ def train_test(params):
             """ Model Compilation """
             tf.compat.v1.logging.info("Compiling the model ...")
             model.compile(
-                optimizer=keras.optimizers.Nadam(learning_rate=params["learning_rate"]),
+                optimizer=keras.optimizers.Adam(learning_rate=params["learning_rate"]),
                 loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                 metrics=["accuracy"],
             )
@@ -69,14 +69,15 @@ def train_test(params):
             input_shape=(32, 32, 3),
             num_classes=10,
             lambda_loss=params["lambda_loss"],
-            additional_loss=CORAL,
+            additional_loss=coral_loss,
+            prune=params["prune"],
         )
 
         print(model.summary())
         """ Model Compilation """
         tf.compat.v1.logging.info("Compiling the model ...")
         model.compile(
-            optimizer=keras.optimizers.Nadam(learning_rate=params["learning_rate"]),
+            optimizer=keras.optimizers.Adam(learning_rate=params["learning_rate"]),
             loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
             metrics=["accuracy"],
         )
