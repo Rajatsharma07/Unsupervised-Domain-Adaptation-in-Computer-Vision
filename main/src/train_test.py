@@ -44,8 +44,8 @@ def train_test(params):
             tf.compat.v1.logging.info("Building the model ...")
 
             model = merged_model(
-                input_shape=(32, 32, 3),
-                num_classes=10,
+                input_shape=(227, 227, 3),
+                num_classes=31,
                 lambda_loss=params["lambda_loss"],
                 additional_loss=CORAL,
                 prune=params["prune"],
@@ -66,8 +66,8 @@ def train_test(params):
         model = None
 
         model = merged_model(
-            input_shape=(32, 32, 3),
-            num_classes=10,
+            input_shape=(227, 227, 3),
+            num_classes=31,
             lambda_loss=params["lambda_loss"],
             additional_loss=coral_loss,
             prune=params["prune"],
@@ -85,10 +85,10 @@ def train_test(params):
     """ Create callbacks """
     tf.compat.v1.logging.info("Creating the callbacks ...")
     callbacks, log_dir = utils.callbacks_fn(params, my_dir)
-    plot_model(model, os.path.join(log_dir, "Dual_Model.png"), show_shapes=True)
+    # plot_model(model, os.path.join(log_dir, "Dual_Model.png"), show_shapes=True)
 
     tf.compat.v1.logging.info("Calling data preprocessing pipeline...")
-    ds_train, ds_val, ds_test = fetch_data(params)
+    ds_train, _, ds_test = fetch_data(params)
 
     """ Model Training """
     tf.compat.v1.logging.info("Training Started....")

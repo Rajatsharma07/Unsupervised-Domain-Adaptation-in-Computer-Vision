@@ -3,8 +3,32 @@ import tensorflow as tf
 import numpy as np
 import src.config as cn
 from src.utils import extract_mnist_m
+from tensorflow.keras.preprocessing import image_dataset_from_directory
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+
+
+amazon_ds = image_dataset_from_directory(
+    directory=cn.OFFICE_DS_PATH / "amazon",
+    labels="inferred",
+    label_mode="int",
+    batch_size=1,
+    image_size=(227, 227),
+)
+webcam_ds = image_dataset_from_directory(
+    directory=cn.OFFICE_DS_PATH / "webcam",
+    labels="inferred",
+    label_mode="int",
+    batch_size=1,
+    image_size=(227, 227),
+)
+dslr_ds = image_dataset_from_directory(
+    directory=cn.OFFICE_DS_PATH / "dslr",
+    labels="inferred",
+    label_mode="int",
+    batch_size=1,
+    image_size=(227, 227),
+)
 
 
 def shuffle_dataset(data_x, data_Y):
@@ -22,7 +46,6 @@ def resize_and_rescale(image, new_size, is_greyscale):
     if is_greyscale:
         image = tf.expand_dims(image, axis=-1)
         image = tf.image.grayscale_to_rgb(image)
-        # image = tf.tile(image, [1, 1, 3])
     image = tf.image.resize(
         image,
         [new_size, new_size],
@@ -140,7 +163,7 @@ def fetch_data(params):
         ds_train = tf.data.Dataset.from_tensor_slices(
             ((mnistmx_train, mnistx_train), mnistmy_train)
         )
- 
+
         ds_test = tf.data.Dataset.from_tensor_slices(
             ((mnistx_train, mnistx_train), mnisty_train)
         )
@@ -187,4 +210,27 @@ def fetch_data(params):
         return ds_train, _, ds_test
 
     elif params["combination"] == 3:
-        pass
+        source = []
+        target = []
+        source_labels = []
+        target_labels = []
+
+        for x, y in tf.data.Dataset.zip((amazon_ds, webcam_ds.repeat(126))):
+            source.append(tf.squeeze(x[0], axis=0))
+            target.append(tf.squeeze(y[0], axis=0))
+            source_labels.append(x[1])
+            target_labels.append(y[1])
+
+        ds_train = (
+            tf.data.Dataset.from_tensor_slices(((source, target), source_labels))
+            .shuffle(len(source))
+            .batch(params["batch_size"])
+            .prefetch(cn.AUTOTUNE)
+        )
+        ds_test = (
+            tf.data.Dataset.from_tensor_slices(((target, target), target_labels))
+            .shuffle(len(target))
+            .batch(params["batch_size"])
+            .prefetch(cn.AUTOTUNE)
+        )
+        return ds_train, ds_test, ds_test

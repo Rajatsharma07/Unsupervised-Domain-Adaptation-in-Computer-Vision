@@ -14,7 +14,7 @@ def parse_args():
     parser.add_argument(
         "--combination",
         type=int,
-        default=1,
+        default=3,
         help="pass experiment combination, see config file",
     )
 
@@ -32,7 +32,7 @@ def parse_args():
         help="pass image resizing dimension",
     )
 
-    parser.add_argument("--batch_size", default=64, help="batch size", type=int)
+    parser.add_argument("--batch_size", default=16, help="batch size", type=int)
 
     parser.add_argument(
         "--learning_rate", default=0.001, help="Learning rate", type=float
@@ -68,7 +68,7 @@ def parse_args():
 
     parser.add_argument(
         "--use_multiGPU",
-        default=False,
+        default=True,
         help="If yes, multiple single host GPUs will be used, otherwise not",
         type=bool,
     )

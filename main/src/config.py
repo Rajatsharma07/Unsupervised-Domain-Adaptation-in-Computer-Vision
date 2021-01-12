@@ -14,8 +14,14 @@ AUTOTUNE = tf.data.experimental.AUTOTUNE
 DATASET_COMBINATION = {
     "MNIST_to_MNISTM": 1,
     "MNISTM_to_MNIST": 2,
-    "SynSigns_to_GTSRB": 3,
-    "GTSRB_to_SynSigns": 4,
+    "Amazon_to_Webcam": 3,
+    "Amazon_to_DSLR": 4,
+    "Webcam_to_Amazon": 5,
+    "Webcam_to_DSLR": 6,
+    "DSLR_to_Amazon": 7,
+    "DSLR_to+Webcam": 8,
+    "SynSigns_to_GTSRB": 9,
+    "GTSRB_to_SynSigns": 10,
 }
 
 Loss = {1: "CORAL", 2: "Other"}
