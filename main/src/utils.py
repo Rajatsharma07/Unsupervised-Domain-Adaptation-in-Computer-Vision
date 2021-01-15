@@ -1,12 +1,16 @@
 import tensorflow as tf
 import matplotlib.pyplot as plt
-import src.config as cn
 import os
 import logging
 import pickle
 from pathlib import Path
 from tensorflow.keras.callbacks import CSVLogger
 import datetime
+
+if __name__ == "__main__":
+    import config as cn
+else:
+    import src.config as cn
 
 
 def define_logger(log_file):

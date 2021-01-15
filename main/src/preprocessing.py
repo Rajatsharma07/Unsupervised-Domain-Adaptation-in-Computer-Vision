@@ -1,9 +1,15 @@
 import os
 import tensorflow as tf
 import numpy as np
-import src.config as cn
-from src.utils import extract_mnist_m
+
 from tensorflow.keras.preprocessing import image_dataset_from_directory
+
+if __name__ == "__main__":
+    import config as cn
+    from utils import extract_mnist_m
+else:
+    import src.config as cn
+    from src.utils import extract_mnist_m
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 

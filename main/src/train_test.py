@@ -1,13 +1,21 @@
-from src.models import merged_model
 import tensorflow as tf
 from tensorflow import keras
-from src.preprocessing import fetch_data
-import src.utils as utils
 from tensorflow.keras.utils import plot_model
 import os
-import src.config as cn
 from pathlib import Path
-from src.loss import CORAL, kl_divergence, coral_loss
+
+if __name__ == "__main__":
+    import config as cn
+    from models import merged_model
+    from preprocessing import fetch_data
+    import utils as utils
+    from loss import CORAL, kl_divergence, coral_loss
+else:
+    import src.config as cn
+    from src.models import merged_model
+    from src.preprocessing import fetch_data
+    import src.utils as utils
+    from src.loss import CORAL, kl_divergence, coral_loss
 
 
 def train_test(params):
