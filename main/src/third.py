@@ -81,7 +81,7 @@ for x, y in tf.data.Dataset.zip((amazon_ds, webcam_ds.repeat(126))):
 ds_train = tf.data.Dataset.from_tensor_slices(((source, target), source_labels))
 ds_test = tf.data.Dataset.from_tensor_slices(((target, target), target_labels))
 
-# train, val, test = office31(
+# train, val, test = office31(~
 #     source_name="amazon",
 #     target_name="webcam",
 #     seed=1000,
