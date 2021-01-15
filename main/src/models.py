@@ -491,13 +491,13 @@ def AlexNet(
     flatten5 = layers.Flatten()(pool5)
     fc6 = layers.Dense(4096, activation="relu", name="fc6")(flatten5)
     drop6 = layers.Dropout(0.5)(fc6)
-    fc7 = layers.Dense(4096, activation="relu", name="fc7")(fc6)
+    fc7 = layers.Dense(4096, activation="relu", name="fc7")(drop6)
     drop7 = layers.Dropout(0.5)(fc7)
     fc8 = layers.Dense(
         num_classes,
         name="fc8",
         kernel_initializer=tf.keras.initializers.RandomNormal(mean=0.0, stddev=0.005),
-    )(fc7)
+    )(drop7)
     model = models.Model(input, fc8)
     print("AlexNet created.")
 
@@ -585,6 +585,6 @@ def conv2d_bn(
     return x
 
 
-# if __name__ == "__main__":
-#     model = merged_model((227, 227, 3), True)
-#     print("Here")
+if __name__ == "__main__":
+    model = merged_model((227, 227, 3), True)
+    print("Here")

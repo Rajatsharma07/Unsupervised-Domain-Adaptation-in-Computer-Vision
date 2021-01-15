@@ -85,7 +85,7 @@ def train_test(params):
     """ Create callbacks """
     tf.compat.v1.logging.info("Creating the callbacks ...")
     callbacks, log_dir = utils.callbacks_fn(params, my_dir)
-    # plot_model(model, os.path.join(log_dir, "Dual_Model.png"), show_shapes=True)
+    plot_model(model, os.path.join(log_dir, "Dual_Model.png"), show_shapes=True)
 
     tf.compat.v1.logging.info("Calling data preprocessing pipeline...")
     ds_train, _, ds_test = fetch_data(params)

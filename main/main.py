@@ -68,7 +68,7 @@ def parse_args():
 
     parser.add_argument(
         "--use_multiGPU",
-        default=True,
+        default=False,
         help="If yes, multiple single host GPUs will be used, otherwise not",
         type=bool,
     )
