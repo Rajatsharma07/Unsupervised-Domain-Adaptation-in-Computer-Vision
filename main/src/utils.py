@@ -108,7 +108,7 @@ def callbacks_fn(params, my_dir):
     log_dir = tb_logdir
     # file_writer = tf.summary.create_file_writer(tb_logdir + "/custom_evaluation")
     # file_writer.set_as_default()
-    tensorboard_callback = tf.keras.callbacks.TensorBoard(tb_logdir, histogram_freq=1)
+    tensorboard_callback = tf.keras.callbacks.TensorBoard(tb_logdir, histogram_freq=0)
     callback_list.append(tensorboard_callback)
     # print(f"\nTensorboard logs path: {tb_logdir}\n")
     tf.compat.v1.logging.info(f"Tensorboard logs path: {tb_logdir}")

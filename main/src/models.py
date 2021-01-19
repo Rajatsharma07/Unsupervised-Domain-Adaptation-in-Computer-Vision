@@ -107,96 +107,34 @@ import numpy as np
 #     return model
 
 
-# def merged_model(
-#     input_shape, prune, num_classes=10, lambda_loss=0.25, additional_loss=CORAL
-# ):
-#     source_model = custom_Lenet(input_shape)
-#     source_model._name = "Source"
-#     for layer in source_model.layers:
-#         layer._name = layer.name + str("_1")
-
-#     if prune:
-#         target_model = tfmot.sparsity.keras.prune_low_magnitude(
-#             custom_Lenet(input_shape), **cn.pruning_params
-#         )
-#     else:
-#         target_model = custom_Lenet(input_shape)
-
-#     target_model._name = "Target"
-#     for layer in target_model.layers:
-#         layer._name = layer.name + str("_2")
-
-#     source_model.trainable = True
-#     target_model.trainable = True
-
-#     # x = layers.Dense(1024, kernel_initializer=cn.initializer, name="fc3")(
-#     #     source_model.output
-#     # )
-#     # x = layers.BatchNormalization(name="bn_top1")(x)
-#     # x = layers.Activation("relu")(x)
-#     # x = layers.Dropout(0.3)(x)
-#     # x = layers.Dense(64, kernel_initializer=cn.initializer, name="fc4")(x)
-#     # x = layers.BatchNormalization(name="bn_top2")(x)
-#     # x = layers.Activation("relu")(x)
-#     # x = layers.Dropout(0.3)(x)
-#     prediction = layers.Dense(
-#         num_classes, kernel_initializer=cn.initializer, name="prediction"
-#     )(source_model.output)
-#     model = models.Model(
-#         [source_model.input, target_model.input], prediction, name="Full_Model"
-#     )
-
-#     additive_loss = additional_loss(
-#         source_output=source_model.output,
-#         target_output=target_model.output,
-#         percent_lambda=lambda_loss,
-#     )
-
-#     model.add_loss(additive_loss)
-#     model.add_metric(additive_loss, name="domain_loss", aggregation="mean")
-#     return model
-
-
 def merged_model(
-    input_shape,
-    prune,
-    weights=cn.MODEL_PATH / "bvlc_alexnet.npy",
-    num_classes=10,
-    lambda_loss=0.25,
-    additional_loss=CORAL,
+    input_shape, prune, num_classes=31, lambda_loss=0.75, additional_loss=CORAL
 ):
-    source_model = AlexNet(
-        img_shape=input_shape, num_classes=num_classes, weights=weights
-    )
-    source_model._name = "Source"
+    source_model = create_model("source_fe", input_shape)
     for layer in source_model.layers:
         layer._name = layer.name + str("_1")
 
     if prune:
         target_model = tfmot.sparsity.keras.prune_low_magnitude(
-            AlexNet(img_shape=input_shape, num_classes=num_classes, weights=weights),
-            **cn.pruning_params
+            create_model("target_fe", input_shape), **cn.pruning_params
         )
     else:
-        target_model = AlexNet(
-            img_shape=input_shape, num_classes=num_classes, weights=weights
-        )
+        target_model = create_model("target_fe", input_shape)
 
-    target_model._name = "Target"
     for layer in target_model.layers:
         layer._name = layer.name + str("_2")
 
-    source_model.trainable = True
-    target_model.trainable = True
+    for layer in source_model.layers[:15]:
+        layer.trainable = False
 
-    prediction = source_model.output
-    # prediction = layers.Dense(
-    #     num_classes, kernel_initializer=cn.initializer, name="prediction"
-    # )(source_model.output)
-    model = models.Model(
-        [source_model.input, target_model.input], prediction, name="Full_Model"
-    )
+    for layer in target_model.layers[:15]:
+        layer.trainable = False
 
+    x = layers.Dropout(0.3)(source_model.output)
+    prediction = tf.keras.layers.Dense(
+        31, kernel_initializer=cn.initializer, name="prediction"
+    )(x)
+    model = models.Model([source_model.input, target_model.input], prediction)
     additive_loss = additional_loss(
         source_output=source_model.output,
         target_output=target_model.output,
@@ -208,109 +146,59 @@ def merged_model(
     return model
 
 
-# def custom_vgg16(input_shape=(32, 32, 3)):
-#     """
-#     This method creates feature extractor model architecture.
-#     """
-#     inputs = keras.Input(shape=input_shape)
+# def merged_model1(
+#     input_shape,
+#     prune,
+#     weights=cn.MODEL_PATH / "bvlc_alexnet.npy",
+#     num_classes=10,
+#     lambda_loss=0.25,
+#     additional_loss=CORAL,
+# ):
+#     source_model = AlexNet(
+#         img_shape=input_shape, num_classes=num_classes, weights=weights
+#     )
+#     source_model._name = "Source"
+#     for layer in source_model.layers:
+#         layer._name = layer.name + str("_1")
 
-#     x = layers.Conv2D(
-#         32,
-#         kernel_size=3,
-#         kernel_initializer=cn.initializer,
-#         padding="same",
-#         name="conv1_1",
-#     )(inputs)
-#     x = layers.Conv2D(
-#         32,
-#         kernel_size=3,
-#         kernel_initializer=cn.initializer,
-#         padding="same",
-#         name="conv1_2",
-#     )(x)
-#     x = layers.BatchNormalization(name="bn1")(x)
-#     x = layers.Activation("relu")(x)
-#     x = layers.MaxPooling2D()(x)
-#     x = layers.Dropout(0.3)(x)
+#     for layer in source_model.layers[:17]:
+#         layer.trainable = False
 
-#     x = layers.Conv2D(
-#         64,
-#         kernel_size=3,
-#         kernel_initializer=cn.initializer,
-#         padding="same",
-#         name="conv2_1",
-#     )(x)
-#     x = layers.Conv2D(
-#         64,
-#         kernel_size=3,
-#         kernel_initializer=cn.initializer,
-#         padding="same",
-#         name="conv2_2",
-#     )(x)
-#     x = layers.BatchNormalization(name="bn2")(x)
-#     x = layers.Activation("relu")(x)
-#     x = layers.MaxPooling2D()(x)
-#     x = layers.Dropout(0.3)(x)
+#     if prune:
+#         target_model = tfmot.sparsity.keras.prune_low_magnitude(
+#             AlexNet(img_shape=input_shape, num_classes=num_classes, weights=weights),
+#             **cn.pruning_params
+#         )
+#     else:
+#         target_model = AlexNet(
+#             img_shape=input_shape, num_classes=num_classes, weights=weights
+#         )
 
-#     x = layers.Conv2D(
-#         128,
-#         kernel_size=3,
-#         kernel_initializer=cn.initializer,
-#         padding="same",
-#         name="conv3_1",
-#     )(x)
-#     x = layers.Conv2D(
-#         128,
-#         kernel_size=3,
-#         kernel_initializer=cn.initializer,
-#         padding="same",
-#         name="conv3_2",
-#     )(x)
-#     x = layers.BatchNormalization(name="bn3")(x)
-#     x = layers.Activation("relu")(x)
-#     x = layers.MaxPooling2D()(x)
-#     x = layers.Dropout(0.3)(x)
+#     target_model._name = "Target"
+#     for layer in target_model.layers:
+#         layer._name = layer.name + str("_2")
 
-#     x = layers.Conv2D(
-#         256,
-#         kernel_size=3,
-#         kernel_initializer=cn.initializer,
-#         padding="same",
-#         name="conv4_1",
-#     )(x)
-#     x = layers.Conv2D(
-#         256,
-#         kernel_size=3,
-#         kernel_initializer=cn.initializer,
-#         padding="same",
-#         name="conv4_2",
-#     )(x)
-#     x = layers.BatchNormalization(name="bn4")(x)
-#     x = layers.Activation("relu")(x)
-#     x = layers.MaxPooling2D()(x)
-#     x = layers.Dropout(0.3)(x)
+#     for layer in target_model.layers[:17]:
+#         layer.trainable = False
+#     # source_model.trainable = True
+#     # target_model.trainable = True
 
-#     x = layers.Conv2D(
-#         256,
-#         kernel_size=3,
-#         kernel_initializer=cn.initializer,
-#         padding="same",
-#         name="conv5_1",
-#     )(x)
-#     x = layers.Conv2D(
-#         256,
-#         kernel_size=3,
-#         kernel_initializer=cn.initializer,
-#         padding="same",
-#         name="conv5_2",
-#     )(x)
-#     x = layers.BatchNormalization(name="bn5")(x)
-#     x = layers.Activation("relu")(x)
-#     x = layers.MaxPooling2D()(x)
-#     x = layers.Dropout(0.3)(x)
-#     outputs = layers.GlobalAveragePooling2D()(x)
-#     model = models.Model(inputs=inputs, outputs=outputs)
+#     prediction = source_model.output
+#     # prediction = layers.Dense(
+#     #     num_classes, kernel_initializer=cn.initializer, name="prediction"
+#     # )(source_model.output)
+#     model = models.Model(
+#         [source_model.input, target_model.input], prediction, name="Full_Model"
+#     )
 
+#     # additive_loss = additional_loss(
+#     #     source_output=source_model.output,
+#     #     target_output=target_model.output,
+#     #     percent_lambda=lambda_loss,
+#     # )
+
+#     # model.add_loss(additive_loss)
+#     # model.add_metric(additive_loss, name="domain_loss", aggregation="mean")
 #     return model
 
 
@@ -432,9 +320,18 @@ def AlexNet(
         [type]: [description]
     """
     input = tf.keras.Input(img_shape)
+    norm_layer = tf.keras.layers.experimental.preprocessing.Normalization()
+    imagenet_mean = np.array([0.485, 0.456, 0.406])
+    imagenet_stddev = np.array([0.229, 0.224, 0.225])
+
+    # mean = np.array([127.5] * 3)
+    # var = mean ** 2
+    # Scale inputs to [-1, +1]
+    normalize = norm_layer(input)
+    norm_layer.set_weights([imagenet_mean, imagenet_stddev])
 
     conv1 = conv2d_bn(
-        x=input,
+        x=normalize,
         filters=96,
         kernel_size=11,
         strides=4,
@@ -583,6 +480,30 @@ def conv2d_bn(
         )(x_b)
         x = layers.concatenate([x_a, x_b])
     return x
+
+
+def create_model(
+    name, input_shape=(227, 227, 3),
+):
+    base_model = tf.keras.applications.VGG16(
+        include_top=False, weights="imagenet", input_shape=input_shape
+    )
+    for idx, layer in enumerate(base_model.layers):
+        if idx < 15:
+            layer.trainable = False
+        else:
+            layer.trainable = True
+
+    inputs = tf.keras.Input(shape=input_shape)
+    x = base_model(inputs, training=False)
+    x = tf.keras.layers.GlobalAveragePooling2D()(x)
+    # x = tf.keras.layers.Dropout(0.2)(x)
+    # x = tf.keras.layers.Dense(31, kernel_initializer=cn.initializer, name="prediction")(
+    #     x
+    # )
+
+    model = tf.keras.models.Model(inputs=inputs, outputs=x, name=name)
+    return model
 
 
 if __name__ == "__main__":

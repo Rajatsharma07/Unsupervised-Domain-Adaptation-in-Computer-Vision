@@ -1,7 +1,10 @@
 import tensorflow as tf
 import os
 import argparse
-from src import train_test as te
+from src.train_test import train_test
+from tensorflow.python.client import device_lib
+
+print(device_lib.list_local_devices())
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 physical_devices = tf.config.list_physical_devices("GPU")
@@ -19,17 +22,11 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--loss",
-        type=int,
-        default="1",
-        help="1 CORAL, see config file",
+        "--loss", type=int, default="1", help="1 CORAL, see config file",
     )
 
     parser.add_argument(
-        "--resize",
-        type=int,
-        default=32,
-        help="pass image resizing dimension",
+        "--resize", type=int, default=32, help="pass image resizing dimension",
     )
 
     parser.add_argument("--batch_size", default=16, help="batch size", type=int)
@@ -43,7 +40,7 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--lambda_loss", help="Additional loss lambda value", default=8, type=float
+        "--lambda_loss", help="Additional loss lambda value", default=0.75, type=float
     )
 
     parser.add_argument(
@@ -61,7 +58,7 @@ def parse_args():
 
     parser.add_argument(
         "--save_model",
-        default=True,
+        default=False,
         help="If yes, model will be saved, otherwise not",
         type=bool,
     )
@@ -92,7 +89,7 @@ def main():
     ], "The mode must be train_test or eval"
 
     if params["mode"] == "train_test":
-        model, hist, results = te.train_test(params)
+        model, hist, results = train_test(params)
 
     elif params["mode"] == "eval":
         pass

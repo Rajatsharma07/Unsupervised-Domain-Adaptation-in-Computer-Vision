@@ -6,7 +6,7 @@ from pathlib import Path
 
 if __name__ == "__main__":
     import config as cn
-    from models import merged_model
+    from models import merged_model, merged_model1
     from preprocessing import fetch_data
     import utils as utils
     from loss import CORAL, kl_divergence, coral_loss
@@ -59,7 +59,7 @@ def train_test(params):
                 prune=params["prune"],
             )
 
-            print(model.summary())
+            # print(model.summary())
             """ Model Compilation """
             tf.compat.v1.logging.info("Compiling the model ...")
             model.compile(
@@ -81,7 +81,7 @@ def train_test(params):
             prune=params["prune"],
         )
 
-        print(model.summary())
+        # print(model.summary())
         """ Model Compilation """
         tf.compat.v1.logging.info("Compiling the model ...")
         model.compile(
@@ -93,7 +93,7 @@ def train_test(params):
     """ Create callbacks """
     tf.compat.v1.logging.info("Creating the callbacks ...")
     callbacks, log_dir = utils.callbacks_fn(params, my_dir)
-    plot_model(model, os.path.join(log_dir, "Dual_Model.png"), show_shapes=True)
+    # plot_model(model, os.path.join(log_dir, "Dual_Model.png"), show_shapes=True)
 
     tf.compat.v1.logging.info("Calling data preprocessing pipeline...")
     ds_train, _, ds_test = fetch_data(params)
