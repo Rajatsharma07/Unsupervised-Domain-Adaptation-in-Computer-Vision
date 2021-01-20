@@ -5,11 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 from pathlib import Path
-
-if __name__ == "__main__":
-    import config as cn
-else:
-    import src.config as cn
+import src.config as cn
 
 
 def test_accuracy(

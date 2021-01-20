@@ -1,44 +1,26 @@
 import os
-import config as cn
-from tensorflow.keras.preprocessing import image_dataset_from_directory
 from pathlib import Path
-
-# from office31 import office31
 import tensorflow as tf
 import numpy as np
 
-# from tensorflow.keras.preprocessing.image import image_dataset_from_directory
+AUTOTUNE = tf.data.experimental.AUTOTUNE
+BASE_DIR = Path("/root/Master-Thesis")  # Base path
+# import config as cn
+# from tensorflow.keras.preprocessing import image_dataset_from_directory
+
+
+OFFICE_DS_PATH = BASE_DIR / Path("data/office31/")
+# from office31 import office31
+
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
 
-# amazon_ds = image_dataset_from_directory(
-#     directory=cn.OFFICE_DS_PATH / Path("amazon"),
-#     labels="inferred",
-#     label_mode="int",
-#     batch_size=1,
-#     image_size=(227, 227),
-# )
-# webcam_ds = image_dataset_from_directory(
-#     directory=cn.OFFICE_DS_PATH / Path("webcam"),
-#     labels="inferred",
-#     label_mode="int",
-#     batch_size=1,
-#     image_size=(227, 227),
-# )
-# dslr_ds = image_dataset_from_directory(
-#     directory=cn.OFFICE_DS_PATH / Path("dslr"),
-#     labels="inferred",
-#     label_mode="int",
-#     batch_size=16,
-#     image_size=(227, 227),
-# )
 print("Hello")
-ds1 = tf.data.Dataset.zip((amazon_ds, webcam_ds.repeat(8)))
-source = []
-target = []
-source_labels = []
-target_labels = []
+# source = []
+# target = []
+# source_labels = []
+# target_labels = []
 # for x, y in tf.data.Dataset.zip((amazon_ds, webcam_ds.repeat(126))):
 #     source.append(x[0])
 #     target.append(y[0])
@@ -51,14 +33,14 @@ target_labels = []
 # ds4 = tf.data.Dataset.zip((webcam_ds, dslr_ds.repeat(2)))
 # ds5 = tf.data.Dataset.zip((dslr_ds.repeat(6), amazon_ds))
 # ds6 = tf.data.Dataset.zip((dslr_ds.repeat(2), webcam_ds))
-for x, y in tf.data.Dataset.zip((amazon_ds, webcam_ds.repeat(126))):
-    source.append(tf.squeeze(x[0]))
-    target.append(y[0])
-    source_labels.append(x[1])
-    target_labels.append(y[1])
+# for x, y in tf.data.Dataset.zip((amazon_ds, webcam_ds.repeat(126))):
+#     source.append(tf.squeeze(x[0]))
+#     target.append(y[0])
+#     source_labels.append(x[1])
+#     target_labels.append(y[1])
 
-ds_train = tf.data.Dataset.from_tensor_slices(((source, target), source_labels))
-ds_test = tf.data.Dataset.from_tensor_slices(((target, target), target_labels))
+# ds_train = tf.data.Dataset.from_tensor_slices(((source, target), source_labels))
+# ds_test = tf.data.Dataset.from_tensor_slices(((target, target), target_labels))
 
 # train, val, test = office31(~
 #     source_name="amazon",
@@ -102,9 +84,74 @@ ds_test = tf.data.Dataset.from_tensor_slices(((target, target), target_labels))
 #     source_labels.append(data_imgs[1][0].numpy().decode("utf-8"))
 #     target_labels.append(data_imgs[1][1].numpy().decode("utf-8"))
 
-np.save("source.npy", np.stack(source))
-np.save("target.npy", np.stack(target))
-np.save("source_lbl.npy", np.stack(source_labels))
-np.save("target_lbl.npy", np.stack(target_labels))
+# np.save("source.npy", np.stack(source))
+# np.save("target.npy", np.stack(target))
+# np.save("source_lbl.npy", np.stack(source_labels))
+# np.save("target_lbl.npy", np.stack(target_labels))
+source_directory = OFFICE_DS_PATH / "amazon"
+target_directory = OFFICE_DS_PATH / "webcam"
+# ds_train = tf.data.Dataset.list_files(str(Path(directory + "*.jpg")))
+
+
+def create_paths(path):
+    all_image_paths = [str(path) for path in list(path.glob("*/*"))]
+    label_names = sorted(item.name for item in path.glob("*/") if item.is_dir())
+    label_to_index = dict((name, index) for index, name in enumerate(label_names))
+
+    all_image_labels = [
+        label_to_index[Path(path).parent.name] for path in all_image_paths
+    ]
+
+    return all_image_paths, all_image_labels
+
+
+source_images, source_labels = create_paths(source_directory)
+target_images, target_labels = create_paths(target_directory)
+
+# path_ds = tf.data.Dataset.from_tensor_slices(all_image_paths)
+# label_ds = tf.data.Dataset.from_tensor_slices(all_image_labels)
+
+
+def process_image(file, label):
+    image = tf.io.read_file(file)
+    image = tf.image.decode_jpeg(image, channels=3)
+    image = tf.cast(image, tf.float32)
+    image = tf.image.resize(
+        image,
+        [227, 227],
+        antialias=True,
+        method="nearest",
+    )
+    image = image / 255.0
+
+    return image, label
+
+
+# train_ds = tf.data.Dataset.from_tensor_slices(
+#     ((source_images, target_images), (source_labels, target_labels))
+# )
+
+source_ds = tf.data.Dataset.from_tensor_slices((source_images, source_labels))
+source_ds = source_ds.map(process_image)
+target_ds = tf.data.Dataset.from_tensor_slices((target_images, target_labels))
+target_ds = target_ds.map(process_image)
+target_ds = target_ds.repeat(4)
+
+source = []
+target = []
+source_labels = []
+target_labels = []
+
+for x, y in tf.data.Dataset.zip((source_ds, target_ds)):
+    source.append(x[0])
+    target.append(y[0])
+    source_labels.append(x[1])
+    target_labels.append(y[1])
+
+# train_ds = train_ds.map(
+#     lambda x, y: (process_image(x[0], y[0]), process_image(x[1], y[1])),
+#     num_parallel_calls=AUTOTUNE,
+# )
+ds_train = tf.data.Dataset.from_tensor_slices(((source, target), source_labels))
 
 print("Hello1")

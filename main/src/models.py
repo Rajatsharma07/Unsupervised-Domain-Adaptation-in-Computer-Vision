@@ -1,110 +1,9 @@
 import tensorflow as tf
 from tensorflow.keras import models, layers
-
-if __name__ == "__main__":
-    import config as cn
-    from loss import CORAL
-else:
-    import src.config as cn
-    from src.loss import CORAL
-
+import src.config as cn
+from src.loss import CORAL
 import tensorflow_model_optimization as tfmot
 import numpy as np
-
-# def merged_model(
-#     input_shape, prune, num_classes=10, lambda_loss=0.25, additional_loss=CORAL
-# ):
-#     source_model = custom_vgg16(input_shape)
-#     source_model._name = "Source"
-#     for layer in source_model.layers:
-#         layer._name = layer.name + str("_source")
-
-#     if prune:
-#         target_model = tfmot.sparsity.keras.prune_low_magnitude(
-#             custom_vgg16(input_shape), **cn.pruning_params
-#         )
-#     else:
-#         target_model = custom_vgg16(input_shape)
-
-#     target_model._name = "Target"
-#     for layer in target_model.layers:
-#         layer._name = layer.name + str("_target")
-
-#     source_model.trainable = True
-#     target_model.trainable = True
-
-#     x = layers.BatchNormalization(name="bn_top1")(source_model.output)
-#     x = layers.Activation("relu")(x)
-#     x = layers.Dense(4096, kernel_initializer=cn.initializer)(x)
-#     x = layers.Activation("relu")(x)
-#     x = layers.Dense(4096, kernel_initializer=cn.initializer)(x)
-#     x = layers.Activation("relu")(x)
-#     prediction = layers.Dense(
-#         num_classes,
-#         kernel_initializer=tf.keras.initializers.RandomNormal(mean=0.0, stddev=0.005),
-#     )(x)
-#     model = models.Model(
-#         [source_model.input, target_model.input], prediction, name="Full_Model"
-#     )
-
-#     additive_loss = additional_loss(
-#         source_output=source_model.output,
-#         target_output=target_model.output,
-#         percent_lambda=lambda_loss,
-#     )
-
-#     model.add_loss(additive_loss)
-#     model.add_metric(additive_loss, name="Loss2", aggregation="mean")
-#     return model
-
-
-# def merged_model1(
-#     input_shape, prune, num_classes=10, lambda_loss=0.25, additional_loss=CORAL
-# ):
-#     source_model = custom_alexnet(input_shape)
-#     source_model._name = "Source"
-#     for layer in source_model.layers:
-#         layer._name = layer.name + str("_source")
-
-#     if prune:
-#         target_model = tfmot.sparsity.keras.prune_low_magnitude(
-#             custom_alexnet(input_shape), **cn.pruning_params
-#         )
-#     else:
-#         target_model = custom_alexnet(input_shape)
-
-#     target_model._name = "Target"
-#     for layer in target_model.layers:
-#         layer._name = layer.name + str("_target")
-
-#     source_model.trainable = True
-#     target_model.trainable = True
-
-#     x = layers.Dense(4096, kernel_initializer=cn.initializer)(source_model.output)
-#     x = layers.BatchNormalization(name="bn_top2")(x)
-#     x = layers.Activation("relu")(x)
-#     x = layers.Dropout(0.3)(x)
-#     x = layers.Dense(4096, kernel_initializer=cn.initializer)(x)
-#     x = layers.BatchNormalization(name="bn_top3")(x)
-#     x = layers.Activation("relu")(x)
-#     x = layers.Dropout(0.3)(x)
-#     prediction = layers.Dense(
-#         num_classes,
-#         kernel_initializer=tf.keras.initializers.RandomNormal(mean=0.0, stddev=0.005),
-#     )(x)
-#     model = models.Model(
-#         [source_model.input, target_model.input], prediction, name="Full_Model"
-#     )
-
-#     additive_loss = additional_loss(
-#         source_output=source_model.output,
-#         target_output=target_model.output,
-#         percent_lambda=lambda_loss,
-#     )
-
-#     model.add_loss(additive_loss)
-#     model.add_metric(additive_loss, name="DomainLoss", aggregation="mean")
-#     return model
 
 
 def merged_model(
@@ -482,9 +381,17 @@ def conv2d_bn(
     return x
 
 
-def create_model(
-    name, input_shape=(227, 227, 3),
-):
+def create_model(name, input_shape=(227, 227, 3)):
+    """[summary]
+
+    Args:
+        name ([type]): [description]
+        input_shape (tuple, optional): [description]. Defaults to (227, 227, 3).
+
+    Returns:
+        [type]: [description]
+    """
+
     base_model = tf.keras.applications.VGG16(
         include_top=False, weights="imagenet", input_shape=input_shape
     )
@@ -498,9 +405,7 @@ def create_model(
     x = base_model(inputs, training=False)
     x = tf.keras.layers.GlobalAveragePooling2D()(x)
     # x = tf.keras.layers.Dropout(0.2)(x)
-    # x = tf.keras.layers.Dense(31, kernel_initializer=cn.initializer, name="prediction")(
-    #     x
-    # )
+    # x = tf.keras.layers.Dense(31, kernel_initializer=initializer, name="prediction")(x)
 
     model = tf.keras.models.Model(inputs=inputs, outputs=x, name=name)
     return model

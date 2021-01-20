@@ -3,19 +3,11 @@ from tensorflow import keras
 from tensorflow.keras.utils import plot_model
 import os
 from pathlib import Path
-
-if __name__ == "__main__":
-    import config as cn
-    from models import merged_model, merged_model1
-    from preprocessing import fetch_data
-    import utils as utils
-    from loss import CORAL, kl_divergence, coral_loss
-else:
-    import src.config as cn
-    from src.models import merged_model
-    from src.preprocessing import fetch_data
-    import src.utils as utils
-    from src.loss import CORAL, kl_divergence, coral_loss
+import src.config as cn
+from src.models import merged_model
+from src.preprocessing import fetch_data
+import src.utils as utils
+from src.loss import CORAL, kl_divergence, coral_loss
 
 
 def train_test(params):
@@ -96,7 +88,7 @@ def train_test(params):
     # plot_model(model, os.path.join(log_dir, "Dual_Model.png"), show_shapes=True)
 
     tf.compat.v1.logging.info("Calling data preprocessing pipeline...")
-    ds_train, _, ds_test = fetch_data(params)
+    ds_train, ds_test = fetch_data(params)
 
     """ Model Training """
     tf.compat.v1.logging.info("Training Started....")

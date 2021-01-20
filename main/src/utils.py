@@ -6,11 +6,8 @@ import pickle
 from pathlib import Path
 from tensorflow.keras.callbacks import CSVLogger
 import datetime
-
-if __name__ == "__main__":
-    import config as cn
-else:
-    import src.config as cn
+import src.config as cn
+import numpy as np
 
 
 def define_logger(log_file):
@@ -164,3 +161,25 @@ def callbacks_fn(params, my_dir):
         tf.compat.v1.logging.info(f"Model Checkpoint path: {checkpoint_path}")
 
     return callback_list, log_dir
+
+
+def create_paths(path):
+    all_image_paths = [str(path) for path in list(path.glob("*/*"))]
+    label_names = sorted(item.name for item in path.glob("*/") if item.is_dir())
+    label_to_index = dict((name, index) for index, name in enumerate(label_names))
+
+    all_image_labels = [
+        label_to_index[Path(path).parent.name] for path in all_image_paths
+    ]
+
+    return all_image_paths, all_image_labels
+
+
+def shuffle_dataset(data_x, data_Y):
+    # np.random.seed(seed_val)
+    index_shuffled = np.arange(data_x.shape[0])
+    np.random.shuffle(index_shuffled)
+    data_x = np.array(data_x)
+    data_x = data_x[index_shuffled]
+    data_Y = (np.array(data_Y))[index_shuffled]
+    return data_x, data_Y
