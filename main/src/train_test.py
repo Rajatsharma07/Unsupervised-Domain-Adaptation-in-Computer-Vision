@@ -49,6 +49,7 @@ def train_test(params):
                 lambda_loss=params["lambda_loss"],
                 additional_loss=CORAL,
                 prune=params["prune"],
+                freeze_upto=15,
             )
 
             # print(model.summary())
@@ -71,6 +72,7 @@ def train_test(params):
             lambda_loss=params["lambda_loss"],
             additional_loss=coral_loss,
             prune=params["prune"],
+            freeze_upto=15,
         )
 
         # print(model.summary())
@@ -97,7 +99,7 @@ def train_test(params):
         ds_train,
         validation_data=ds_test,
         epochs=params["epochs"],
-        verbose=2,
+        verbose=1,
         callbacks=callbacks,
     )
     tf.compat.v1.logging.info("Training finished....")

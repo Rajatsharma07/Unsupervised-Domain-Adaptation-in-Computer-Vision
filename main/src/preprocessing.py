@@ -1,25 +1,46 @@
 import os
 import tensorflow as tf
-from tensorflow.keras import layers
-from tensorflow import keras
 import src.config as cn
 import math
 from src.utils import extract_mnist_m, create_paths, shuffle_dataset
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
-# Create a generator
-rng = tf.random.Generator.from_seed(123, alg="philox")
 
-data_augmentation = keras.Sequential(
-    [
-        layers.experimental.preprocessing.RandomContrast(0.1, 0.3),
-        layers.experimental.preprocessing.RandomZoom(0.1),
-        layers.experimental.preprocessing.RandomFlip("horizontal_and_vertical"),
-        layers.experimental.preprocessing.RandomRotation(
-            0.2, interpolation="nearest", fill_mode="reflect"
-        ),
-    ]
-)
+
+def augment_ds(image, label):
+    # Make Images Greyscale
+    image = tf.cond(
+        tf.random.uniform(shape=[], minval=0, maxval=1) < 0.1,
+        lambda: tf.tile(tf.image.rgb_to_grayscale(image), [1, 1, 3]),
+        lambda: image,
+    )
+    noise = tf.random.normal(
+        shape=tf.shape(image), mean=0.0, stddev=1, dtype=tf.float32
+    )
+    # Adding Gaussian Noise
+    image = tf.cond(
+        tf.random.uniform(shape=[], minval=0, maxval=1) < 0.1,
+        lambda: tf.add(image, noise),
+        lambda: image,
+    )
+
+    # Colour Augmentations
+    image = tf.image.random_brightness(image, max_delta=0.2)
+    image = tf.image.random_contrast(image, lower=0.1, upper=0.3)
+    image = tf.image.adjust_saturation(image, 2)
+
+    # Rotating Images
+    image = tf.cond(
+        tf.random.uniform(shape=[], minval=0, maxval=1) < 0.1,
+        lambda: tf.image.rot90(image, k=1),
+        lambda: image,
+    )
+
+    # Flipping Images
+    image = tf.image.random_flip_left_right(image)
+    image = tf.image.random_flip_up_down(image)
+
+    return image, label
 
 
 def resize_and_rescale(image, new_size, is_greyscale):
@@ -58,21 +79,22 @@ def prepare_office_ds(source_directory, target_directory, params):
     )
     source_ds = (
         source_ds.map(read_images, num_parallel_calls=cn.AUTOTUNE)
+        .cache()
         .shuffle(len(source_images_list), reshuffle_each_iteration=True)
-        .batch(32)
     )
 
     source_ds = source_ds.map(
-        lambda x, y: (data_augmentation(x, training=True), y),
-        num_parallel_calls=cn.AUTOTUNE,
-    ).unbatch()
+        (lambda x, y: augment_ds(x, y)), num_parallel_calls=cn.AUTOTUNE
+    )
 
     target_ds_original = tf.data.Dataset.from_tensor_slices(
         (target_images_list, target_labels_list)
     )
-    target_ds_original = target_ds_original.map(
-        read_images, num_parallel_calls=cn.AUTOTUNE
-    ).shuffle(len(target_images_list), reshuffle_each_iteration=True)
+    target_ds_original = (
+        target_ds_original.map(read_images, num_parallel_calls=cn.AUTOTUNE)
+        .cache()
+        .shuffle(len(target_images_list), reshuffle_each_iteration=True)
+    )
 
     target_ds = target_ds_original.repeat(ds_repetition_value)
 
@@ -125,9 +147,6 @@ def augment(
     image0 = tf.image.random_brightness(image0, max_delta=0.5)
     image0 = tf.image.random_contrast(image0, lower=0.1, upper=0.5)
     image0 = tf.image.adjust_saturation(image0, 3)
-    # a left upside down flipped
-    # image0 = tf.image.random_flip_left_right(image0)  # 50%
-    # image0 = tf.image.random_flip_up_down(image0)  # 50%
     return ((image0, image1), label)
 
 

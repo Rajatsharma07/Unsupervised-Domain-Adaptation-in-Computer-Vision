@@ -7,18 +7,23 @@ import numpy as np
 
 
 def merged_model(
-    input_shape, prune, num_classes=31, lambda_loss=0.75, additional_loss=CORAL
+    input_shape,
+    prune,
+    num_classes=31,
+    lambda_loss=0.75,
+    additional_loss=CORAL,
+    freeze_upto=15,
 ):
-    source_model = create_model("source_fe", input_shape)
+    source_model = create_model("source_fe", input_shape, freeze_upto)
     for layer in source_model.layers:
         layer._name = layer.name + str("_1")
 
     if prune:
         target_model = tfmot.sparsity.keras.prune_low_magnitude(
-            create_model("target_fe", input_shape), **cn.pruning_params
+            create_model("target_fe", input_shape, freeze_upto), **cn.pruning_params
         )
     else:
-        target_model = create_model("target_fe", input_shape)
+        target_model = create_model("target_fe", input_shape, freeze_upto)
 
     for layer in target_model.layers:
         layer._name = layer.name + str("_2")
@@ -381,7 +386,7 @@ def conv2d_bn(
     return x
 
 
-def create_model(name, input_shape=(227, 227, 3)):
+def create_model(name, input_shape=(227, 227, 3), freeze_upto=15):
     """[summary]
 
     Args:
@@ -396,7 +401,7 @@ def create_model(name, input_shape=(227, 227, 3)):
         include_top=False, weights="imagenet", input_shape=input_shape
     )
     for idx, layer in enumerate(base_model.layers):
-        if idx < 15:
+        if idx < freeze_upto:
             layer.trainable = False
         else:
             layer.trainable = True
@@ -409,8 +414,3 @@ def create_model(name, input_shape=(227, 227, 3)):
 
     model = tf.keras.models.Model(inputs=inputs, outputs=x, name=name)
     return model
-
-
-if __name__ == "__main__":
-    model = merged_model((227, 227, 3), True)
-    print("Here")
