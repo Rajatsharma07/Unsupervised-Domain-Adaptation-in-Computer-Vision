@@ -3,7 +3,7 @@ import tensorflow as tf
 
 # from tensorflow import keras
 import src.config as cn
-import math
+
 from src.utils import extract_mnist_m, create_paths, shuffle_dataset
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
@@ -196,25 +196,18 @@ def fetch_data(params):
         source_images_list, source_labels_list = create_paths(source_directory)
         target_images_list, target_labels_list = create_paths(target_directory)
 
-        ds_repetition_value = math.ceil(
-            len(source_images_list) / len(target_images_list)
-        )
-
         source_ds = tf.data.Dataset.from_tensor_slices(
             (source_images_list, source_labels_list)
         )
-        source_ds = source_ds.map(
-            process_image, num_parallel_calls=cn.AUTOTUNE
-        ).shuffle(len(source_images_list), reshuffle_each_iteration=True)
+        source_ds = source_ds.map(process_image, num_parallel_calls=cn.AUTOTUNE)
 
         target_ds_original = tf.data.Dataset.from_tensor_slices(
             (target_images_list, target_labels_list)
         )
         target_ds_original = target_ds_original.map(
             process_image, num_parallel_calls=cn.AUTOTUNE
-        ).shuffle(len(target_images_list), reshuffle_each_iteration=True)
-
-        target_ds = target_ds_original.repeat(ds_repetition_value)
+        )
+        target_ds = target_ds_original.repeat(4)
 
         source_images, target_images, source_labels, target_labels = [], [], [], []
         for x, y in tf.data.Dataset.zip((source_ds, target_ds)):
@@ -226,7 +219,7 @@ def fetch_data(params):
         ds_train = tf.data.Dataset.from_tensor_slices(
             ((source_images, target_images), source_labels)
         )
-        ds_train = ds_train.batch(params["batch_size"]).prefetch(cn.AUTOTUNE)
+        ds_train = ds_train.cache().batch(params["batch_size"]).prefetch(cn.AUTOTUNE)
 
         x1, y1 = [], []
         for x, y in target_ds_original:
