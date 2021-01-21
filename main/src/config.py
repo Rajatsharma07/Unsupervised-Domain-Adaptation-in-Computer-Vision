@@ -12,14 +12,14 @@ MODEL_PATH = BASE_DIR / Path("model_data/")  # Model path
 EVALUATION = BASE_DIR / Path("evaluation/")  # Evalaution plots path
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 DATASET_COMBINATION = {
-    "MNIST_to_MNISTM": 1,
-    "MNISTM_to_MNIST": 2,
-    "Amazon_to_Webcam": 3,
-    "Amazon_to_DSLR": 4,
-    "Webcam_to_Amazon": 5,
-    "Webcam_to_DSLR": 6,
-    "DSLR_to_Amazon": 7,
-    "DSLR_to+Webcam": 8,
+    "Amazon_to_Webcam": 1,
+    "Amazon_to_DSLR": 2,
+    "Webcam_to_Amazon": 3,
+    "Webcam_to_DSLR": 4,
+    "DSLR_to_Amazon": 5,
+    "DSLR_to_Webcam": 6,
+    "MNIST_to_MNISTM": 7,
+    "MNISTM_to_MNIST": 8,
     "SynSigns_to_GTSRB": 9,
     "GTSRB_to_SynSigns": 10,
 }

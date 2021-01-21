@@ -22,11 +22,17 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--loss", type=int, default="1", help="1 CORAL, see config file",
+        "--loss",
+        type=int,
+        default="1",
+        help="1 CORAL, see config file",
     )
 
     parser.add_argument(
-        "--resize", type=int, default=32, help="pass image resizing dimension",
+        "--resize",
+        type=int,
+        default=32,
+        help="pass image resizing dimension",
     )
 
     parser.add_argument("--batch_size", default=16, help="batch size", type=int)

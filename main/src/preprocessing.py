@@ -39,8 +39,61 @@ def process_image(file, label):
     image = tf.keras.applications.vgg16.preprocess_input(image)
     image = tf.image.resize(image, [227, 227], method="nearest")
     image = image / 255.0
-
     return image, label
+
+
+def preprocess_office_ds(source_directory, target_directory, params):
+    source_images_list, source_labels_list = create_paths(source_directory)
+    target_images_list, target_labels_list = create_paths(target_directory)
+
+    ds_repetition_value = math.ceil(len(source_images_list) / len(target_images_list))
+
+    source_ds = tf.data.Dataset.from_tensor_slices(
+        (source_images_list, source_labels_list)
+    )
+    source_ds = source_ds.map(process_image, num_parallel_calls=cn.AUTOTUNE).shuffle(
+        len(source_images_list), reshuffle_each_iteration=True
+    )
+
+    target_ds_original = tf.data.Dataset.from_tensor_slices(
+        (target_images_list, target_labels_list)
+    )
+    target_ds_original = target_ds_original.map(
+        process_image, num_parallel_calls=cn.AUTOTUNE
+    ).shuffle(len(target_images_list), reshuffle_each_iteration=True)
+
+    target_ds = target_ds_original.repeat(ds_repetition_value)
+
+    source_images, target_images, source_labels, target_labels = [], [], [], []
+    for x, y in tf.data.Dataset.zip((source_ds, target_ds)):
+        source_images.append(x[0])
+        target_images.append(y[0])
+        source_labels.append(x[1])
+        target_labels.append(y[1])
+
+    ds_train = tf.data.Dataset.from_tensor_slices(
+        ((source_images, target_images), source_labels)
+    )
+    ds_train = ds_train.batch(params["batch_size"]).prefetch(cn.AUTOTUNE)
+
+    x1, y1 = [], []
+    for x, y in target_ds_original:
+        x1.append(x)
+        y1.append(y)
+
+    ds_test = (
+        tf.data.Dataset.from_tensor_slices(((x1, x1), y1))
+        .batch(params["batch_size"])
+        .prefetch(cn.AUTOTUNE)
+    )
+
+    train_count = [x for x in ds_train]
+    tf.compat.v1.logging.info("Batch count of training set: " + str(len(train_count)))
+
+    test_count = [x for x in ds_test]
+    tf.compat.v1.logging.info("Batch count of test set: " + str(len(test_count)))
+
+    return ds_train, ds_test
 
 
 def augment(
@@ -66,7 +119,44 @@ def augment(
 
 
 def fetch_data(params):
-    if (params["combination"]) == 1:
+
+    if params["combination"] == 1:
+        source_directory = cn.OFFICE_DS_PATH / "amazon"
+        target_directory = cn.OFFICE_DS_PATH / "webcam"
+
+        return preprocess_office_ds(source_directory, target_directory, params)
+
+    elif params["combination"] == 2:
+        source_directory = cn.OFFICE_DS_PATH / "amazon"
+        target_directory = cn.OFFICE_DS_PATH / "dslr"
+
+        return preprocess_office_ds(source_directory, target_directory, params)
+
+    elif params["combination"] == 3:
+        source_directory = cn.OFFICE_DS_PATH / "webcam"
+        target_directory = cn.OFFICE_DS_PATH / "amazon"
+
+        return preprocess_office_ds(source_directory, target_directory, params)
+
+    elif params["combination"] == 4:
+        source_directory = cn.OFFICE_DS_PATH / "webcam"
+        target_directory = cn.OFFICE_DS_PATH / "dslr"
+
+        return preprocess_office_ds(source_directory, target_directory, params)
+
+    elif params["combination"] == 5:
+        source_directory = cn.OFFICE_DS_PATH / "dslr"
+        target_directory = cn.OFFICE_DS_PATH / "amazon"
+
+        return preprocess_office_ds(source_directory, target_directory, params)
+
+    elif params["combination"] == 6:
+        source_directory = cn.OFFICE_DS_PATH / "dslr"
+        target_directory = cn.OFFICE_DS_PATH / "webcam"
+
+        return preprocess_office_ds(source_directory, target_directory, params)
+
+    elif (params["combination"]) == 7:
         (mnistx_train, mnisty_train), (_, _) = tf.keras.datasets.mnist.load_data()
 
         mnistmx_train, _ = extract_mnist_m(cn.MNIST_M_PATH)
@@ -133,7 +223,7 @@ def fetch_data(params):
 
         return ds_train, ds_test
 
-    elif params["combination"] == 2:
+    elif params["combination"] == 8:
 
         (mnistx_train, mnisty_train), (_, _) = tf.keras.datasets.mnist.load_data()
 
@@ -175,66 +265,6 @@ def fetch_data(params):
                 ),
                 num_parallel_calls=cn.AUTOTUNE,
             )
-            .batch(params["batch_size"])
-            .prefetch(cn.AUTOTUNE)
-        )
-
-        train_count = [x for x in ds_train]
-        tf.compat.v1.logging.info(
-            "Batch count of training set: " + str(len(train_count))
-        )
-
-        test_count = [x for x in ds_test]
-        tf.compat.v1.logging.info("Batch count of test set: " + str(len(test_count)))
-
-        return ds_train, ds_test
-
-    elif params["combination"] == 3:
-        source_directory = cn.OFFICE_DS_PATH / "amazon"
-        target_directory = cn.OFFICE_DS_PATH / "webcam"
-
-        source_images_list, source_labels_list = create_paths(source_directory)
-        target_images_list, target_labels_list = create_paths(target_directory)
-
-        ds_repetition_value = math.ceil(
-            len(source_images_list) / len(target_images_list)
-        )
-
-        source_ds = tf.data.Dataset.from_tensor_slices(
-            (source_images_list, source_labels_list)
-        )
-        source_ds = source_ds.map(
-            process_image, num_parallel_calls=cn.AUTOTUNE
-        ).shuffle(len(source_images_list), reshuffle_each_iteration=True)
-
-        target_ds_original = tf.data.Dataset.from_tensor_slices(
-            (target_images_list, target_labels_list)
-        )
-        target_ds_original = target_ds_original.map(
-            process_image, num_parallel_calls=cn.AUTOTUNE
-        ).shuffle(len(target_images_list), reshuffle_each_iteration=True)
-
-        target_ds = target_ds_original.repeat(ds_repetition_value)
-
-        source_images, target_images, source_labels, target_labels = [], [], [], []
-        for x, y in tf.data.Dataset.zip((source_ds, target_ds)):
-            source_images.append(x[0])
-            target_images.append(y[0])
-            source_labels.append(x[1])
-            target_labels.append(y[1])
-
-        ds_train = tf.data.Dataset.from_tensor_slices(
-            ((source_images, target_images), source_labels)
-        )
-        ds_train = ds_train.batch(params["batch_size"]).prefetch(cn.AUTOTUNE)
-
-        x1, y1 = [], []
-        for x, y in target_ds_original:
-            x1.append(x)
-            y1.append(y)
-
-        ds_test = (
-            tf.data.Dataset.from_tensor_slices(((x1, x1), y1))
             .batch(params["batch_size"])
             .prefetch(cn.AUTOTUNE)
         )
