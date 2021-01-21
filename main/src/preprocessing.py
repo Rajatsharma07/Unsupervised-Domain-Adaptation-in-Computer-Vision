@@ -16,7 +16,7 @@ data_augmentation = keras.Sequential(
         layers.experimental.preprocessing.RandomZoom(0.1),
         layers.experimental.preprocessing.RandomFlip("horizontal_and_vertical"),
         layers.experimental.preprocessing.RandomRotation(
-            0.2, interpolation="nearest", fill_mode="nearest"
+            0.2, interpolation="nearest", fill_mode="reflect"
         ),
     ]
 )
@@ -56,12 +56,16 @@ def prepare_office_ds(source_directory, target_directory, params):
     source_ds = tf.data.Dataset.from_tensor_slices(
         (source_images_list, source_labels_list)
     )
-    source_ds = source_ds.map(read_images, num_parallel_calls=cn.AUTOTUNE)
+    source_ds = (
+        source_ds.map(read_images, num_parallel_calls=cn.AUTOTUNE)
+        .shuffle(len(source_images_list), reshuffle_each_iteration=True)
+        .batch(32)
+    )
 
     source_ds = source_ds.map(
         lambda x, y: (data_augmentation(x, training=True), y),
         num_parallel_calls=cn.AUTOTUNE,
-    ).shuffle(len(source_images_list), reshuffle_each_iteration=True)
+    ).unbatch()
 
     target_ds_original = tf.data.Dataset.from_tensor_slices(
         (target_images_list, target_labels_list)

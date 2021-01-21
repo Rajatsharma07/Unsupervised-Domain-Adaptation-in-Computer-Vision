@@ -17,7 +17,7 @@ def parse_args():
     parser.add_argument(
         "--combination",
         type=int,
-        default=3,
+        default=1,
         help="pass experiment combination, see config file",
     )
 
