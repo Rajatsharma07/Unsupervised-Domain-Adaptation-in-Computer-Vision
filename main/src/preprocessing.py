@@ -1,12 +1,25 @@
 import os
 import tensorflow as tf
-
-# from tensorflow import keras
+from tensorflow.keras import layers
+from tensorflow import keras
 import src.config as cn
 import math
 from src.utils import extract_mnist_m, create_paths, shuffle_dataset
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+# Create a generator
+rng = tf.random.Generator.from_seed(123, alg="philox")
+
+data_augmentation = keras.Sequential(
+    [
+        layers.experimental.preprocessing.RandomContrast(0.1, 0.3),
+        layers.experimental.preprocessing.RandomZoom(0.1),
+        layers.experimental.preprocessing.RandomFlip("horizontal_and_vertical"),
+        layers.experimental.preprocessing.RandomRotation(
+            0.2, interpolation="nearest", fill_mode="nearest"
+        ),
+    ]
+)
 
 
 def resize_and_rescale(image, new_size, is_greyscale):
@@ -24,15 +37,7 @@ def resize_and_rescale(image, new_size, is_greyscale):
     return image
 
 
-def rescale_and_cast(src_image, tar_image, label):
-    src_image = tf.cast(src_image, tf.float32) / 255.0
-    src_image = tf.keras.applications.vgg16.preprocess_input(src_image)
-    tar_image = tf.cast(tar_image, tf.float32) / 255.0
-    tar_image = tf.keras.applications.vgg16.preprocess_input(tar_image)
-    return ((src_image, tar_image), label)
-
-
-def process_image(file, label):
+def read_images(file, label):
     image = tf.io.read_file(file)
     image = tf.image.decode_jpeg(image, channels=3)
     image = tf.cast(image, tf.float32)
@@ -42,7 +47,7 @@ def process_image(file, label):
     return image, label
 
 
-def preprocess_office_ds(source_directory, target_directory, params):
+def prepare_office_ds(source_directory, target_directory, params):
     source_images_list, source_labels_list = create_paths(source_directory)
     target_images_list, target_labels_list = create_paths(target_directory)
 
@@ -51,15 +56,18 @@ def preprocess_office_ds(source_directory, target_directory, params):
     source_ds = tf.data.Dataset.from_tensor_slices(
         (source_images_list, source_labels_list)
     )
-    source_ds = source_ds.map(process_image, num_parallel_calls=cn.AUTOTUNE).shuffle(
-        len(source_images_list), reshuffle_each_iteration=True
-    )
+    source_ds = source_ds.map(read_images, num_parallel_calls=cn.AUTOTUNE)
+
+    source_ds = source_ds.map(
+        lambda x, y: (data_augmentation(x, training=True), y),
+        num_parallel_calls=cn.AUTOTUNE,
+    ).shuffle(len(source_images_list), reshuffle_each_iteration=True)
 
     target_ds_original = tf.data.Dataset.from_tensor_slices(
         (target_images_list, target_labels_list)
     )
     target_ds_original = target_ds_original.map(
-        process_image, num_parallel_calls=cn.AUTOTUNE
+        read_images, num_parallel_calls=cn.AUTOTUNE
     ).shuffle(len(target_images_list), reshuffle_each_iteration=True)
 
     target_ds = target_ds_original.repeat(ds_repetition_value)
@@ -74,7 +82,7 @@ def preprocess_office_ds(source_directory, target_directory, params):
     ds_train = tf.data.Dataset.from_tensor_slices(
         ((source_images, target_images), source_labels)
     )
-    ds_train = ds_train.batch(params["batch_size"]).prefetch(cn.AUTOTUNE)
+    ds_train = ds_train.batch(params["batch_size"]).prefetch(buffer_size=cn.AUTOTUNE)
 
     x1, y1 = [], []
     for x, y in target_ds_original:
@@ -84,7 +92,7 @@ def preprocess_office_ds(source_directory, target_directory, params):
     ds_test = (
         tf.data.Dataset.from_tensor_slices(((x1, x1), y1))
         .batch(params["batch_size"])
-        .prefetch(cn.AUTOTUNE)
+        .prefetch(buffer_size=cn.AUTOTUNE)
     )
 
     train_count = [x for x in ds_train]
@@ -104,6 +112,7 @@ def augment(
     source_is_greyscale,
     target_is_greyscale,
 ):
+
     image0 = resize_and_rescale(image_source, new_size, source_is_greyscale)
     image1 = resize_and_rescale(image_target, new_size, target_is_greyscale)
     # if int(channels) == 3:
@@ -113,8 +122,8 @@ def augment(
     image0 = tf.image.random_contrast(image0, lower=0.1, upper=0.5)
     image0 = tf.image.adjust_saturation(image0, 3)
     # a left upside down flipped
-    image0 = tf.image.random_flip_left_right(image0)  # 50%
-
+    # image0 = tf.image.random_flip_left_right(image0)  # 50%
+    # image0 = tf.image.random_flip_up_down(image0)  # 50%
     return ((image0, image1), label)
 
 
@@ -124,37 +133,37 @@ def fetch_data(params):
         source_directory = cn.OFFICE_DS_PATH / "amazon"
         target_directory = cn.OFFICE_DS_PATH / "webcam"
 
-        return preprocess_office_ds(source_directory, target_directory, params)
+        return prepare_office_ds(source_directory, target_directory, params)
 
     elif params["combination"] == 2:
         source_directory = cn.OFFICE_DS_PATH / "amazon"
         target_directory = cn.OFFICE_DS_PATH / "dslr"
 
-        return preprocess_office_ds(source_directory, target_directory, params)
+        return prepare_office_ds(source_directory, target_directory, params)
 
     elif params["combination"] == 3:
         source_directory = cn.OFFICE_DS_PATH / "webcam"
         target_directory = cn.OFFICE_DS_PATH / "amazon"
 
-        return preprocess_office_ds(source_directory, target_directory, params)
+        return prepare_office_ds(source_directory, target_directory, params)
 
     elif params["combination"] == 4:
         source_directory = cn.OFFICE_DS_PATH / "webcam"
         target_directory = cn.OFFICE_DS_PATH / "dslr"
 
-        return preprocess_office_ds(source_directory, target_directory, params)
+        return prepare_office_ds(source_directory, target_directory, params)
 
     elif params["combination"] == 5:
         source_directory = cn.OFFICE_DS_PATH / "dslr"
         target_directory = cn.OFFICE_DS_PATH / "amazon"
 
-        return preprocess_office_ds(source_directory, target_directory, params)
+        return prepare_office_ds(source_directory, target_directory, params)
 
     elif params["combination"] == 6:
         source_directory = cn.OFFICE_DS_PATH / "dslr"
         target_directory = cn.OFFICE_DS_PATH / "webcam"
 
-        return preprocess_office_ds(source_directory, target_directory, params)
+        return prepare_office_ds(source_directory, target_directory, params)
 
     elif (params["combination"]) == 7:
         (mnistx_train, mnisty_train), (_, _) = tf.keras.datasets.mnist.load_data()
@@ -176,7 +185,7 @@ def fetch_data(params):
         # Setup for train dataset
         ds_train = (
             ds_train.map(
-                (lambda x, y: augment(x[0], x[1], y, params["resize"], True, False)),
+                lambda x, y: augment(x[0], x[1], y, params["resize"], True, False),
                 num_parallel_calls=cn.AUTOTUNE,
             )
             .cache()
