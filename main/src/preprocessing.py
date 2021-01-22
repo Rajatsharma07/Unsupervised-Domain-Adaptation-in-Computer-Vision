@@ -7,33 +7,36 @@ from src.utils import extract_mnist_m, create_paths, shuffle_dataset
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
 
-def augment_ds(image, label):
+def augment_ds(image, label, prob=0.2):
+
     # Make Images Greyscale
     image = tf.cond(
-        tf.random.uniform(shape=[], minval=0, maxval=1) < 0.1,
+        tf.random.uniform(shape=[], minval=0, maxval=1) < prob,
         lambda: tf.tile(tf.image.rgb_to_grayscale(image), [1, 1, 3]),
         lambda: image,
     )
+
+    # Adding Gaussian Noise
     noise = tf.random.normal(
         shape=tf.shape(image), mean=0.0, stddev=1, dtype=tf.float32
     )
-    # Adding Gaussian Noise
     image = tf.cond(
-        tf.random.uniform(shape=[], minval=0, maxval=1) < 0.1,
+        tf.random.uniform(shape=[], minval=0, maxval=1) < prob,
         lambda: tf.add(image, noise),
         lambda: image,
     )
 
     # Colour Augmentations
-    image = tf.image.random_brightness(image, max_delta=0.2)
-    image = tf.image.random_contrast(image, lower=0.1, upper=0.3)
-    image = tf.image.adjust_saturation(image, 2)
+    image = tf.image.random_hue(image, 0.08)
+    image = tf.image.random_saturation(image, 2, 5)
+    image = tf.image.random_brightness(image, max_delta=0.4)
+    image = tf.image.random_contrast(image, lower=0.7, upper=1.3)
 
     # Rotating Images
     image = tf.cond(
-        tf.random.uniform(shape=[], minval=0, maxval=1) < 0.1,
+        tf.random.uniform(shape=[], minval=0, maxval=1) < prob,
         lambda: tf.image.rot90(image, k=1),
-        lambda: image,
+        lambda: tf.image.rot90(image, k=3),
     )
 
     # Flipping Images
@@ -64,7 +67,6 @@ def read_images(file, new_size):
     image = tf.cast(image, tf.float32)
     image = tf.keras.applications.vgg16.preprocess_input(image)
     image = tf.image.resize(image, [new_size, new_size], method="nearest")
-    # image = image / 255.0
     return image
 
 

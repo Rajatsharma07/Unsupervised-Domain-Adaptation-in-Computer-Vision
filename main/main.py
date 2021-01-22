@@ -46,7 +46,7 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--lambda_loss", help="Additional loss lambda value", default=0.75, type=float
+        "--lambda_loss", help="Additional loss lambda value", default=0.50, type=float
     )
 
     parser.add_argument(
@@ -57,7 +57,7 @@ def parse_args():
 
     parser.add_argument(
         "--save_weights",
-        default=False,
+        default=True,
         help="If yes, weights will be saved, otherwise not",
         type=bool,
     )
