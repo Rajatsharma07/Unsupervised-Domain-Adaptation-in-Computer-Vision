@@ -23,7 +23,7 @@ def merged_model(
             create_model("target_fe", input_shape, freeze_upto), **cn.pruning_params
         )
     else:
-        target_model = create_model("target_fe", input_shape, freeze_upto)
+        target_model = create_model("target_fe", input_shape)
 
     for layer in target_model.layers:
         layer._name = layer.name + str("_2")
@@ -42,7 +42,9 @@ def merged_model(
 
     x = layers.Dropout(0.3)(source_model.output)
     prediction = tf.keras.layers.Dense(
-        31, kernel_initializer=cn.initializer, name="prediction"
+        31,
+        kernel_initializer=tf.initializers.RandomNormal(0, 0.005),
+        name="prediction",
     )(x)
     model = models.Model([source_model.input, target_model.input], prediction)
     additive_loss = additional_loss(

@@ -35,10 +35,10 @@ def parse_args():
         help="pass image resizing dimension",
     )
 
-    parser.add_argument("--batch_size", default=16, help="batch size", type=int)
+    parser.add_argument("--batch_size", default=32, help="batch size", type=int)
 
     parser.add_argument(
-        "--learning_rate", default=0.001, help="Learning rate", type=float
+        "--learning_rate", default=0.0001, help="Learning rate", type=float
     )
 
     parser.add_argument(

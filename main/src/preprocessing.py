@@ -15,7 +15,7 @@ def augment_ds(image, label):
         lambda: image,
     )
     noise = tf.random.normal(
-        shape=tf.shape(image), mean=0.0, stddev=1, dtype=tf.float32
+        shape=tf.shape(image), mean=0.0, stddev=1, dtype=tf.float64
     )
     # Adding Gaussian Noise
     image = tf.cond(
@@ -61,7 +61,7 @@ def resize_and_rescale(image, new_size, is_greyscale):
 def read_images(file, new_size):
     image = tf.io.read_file(file)
     image = tf.image.decode_jpeg(image, channels=3)
-    image = tf.cast(image, tf.float32)
+    image = tf.cast(image, tf.float64)
     image = tf.keras.applications.vgg16.preprocess_input(image)
     image = tf.image.resize(image, [new_size, new_size], method="nearest")
     image = image / 255.0

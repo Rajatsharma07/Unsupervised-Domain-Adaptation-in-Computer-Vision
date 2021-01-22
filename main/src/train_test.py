@@ -80,7 +80,7 @@ def train_test(params):
         tf.compat.v1.logging.info("Compiling the model ...")
         model.compile(
             optimizer=keras.optimizers.Adam(learning_rate=params["learning_rate"]),
-            loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+            loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
             metrics=["accuracy"],
         )
 
@@ -119,7 +119,7 @@ def train_test(params):
             cn.MODEL_PATH, (Path(log_dir).parent).name, Path(log_dir).name
         )
         Path(model_path).mkdir(parents=True, exist_ok=True)
-        model.save(model_path)
+        model.save(os.path.join(model_path, "model.h5"))
         tf.compat.v1.logging.info(f"Model successfully saved at: {model_path}")
 
     """ Evaluate on Target Dataset"""
