@@ -58,27 +58,44 @@ def resize_and_rescale(image, new_size, is_greyscale):
     return image
 
 
-def read_images(file, label):
+def read_images(file, new_size):
     image = tf.io.read_file(file)
     image = tf.image.decode_jpeg(image, channels=3)
     image = tf.cast(image, tf.float32)
     image = tf.keras.applications.vgg16.preprocess_input(image)
-    image = tf.image.resize(image, [227, 227], method="nearest")
+    image = tf.image.resize(image, [new_size, new_size], method="nearest")
     image = image / 255.0
-    return image, label
+    return image
 
 
-def prepare_office_ds(source_directory, target_directory, params):
+def prepare_office_ds(source_directory, target_directory, params, source_is_less=False):
+
     source_images_list, source_labels_list = create_paths(source_directory)
     target_images_list, target_labels_list = create_paths(target_directory)
 
-    ds_repetition_value = math.ceil(len(source_images_list) / len(target_images_list))
+    if source_is_less:
+        source_images_list = source_images_list * math.ceil(
+            len(target_images_list) / len(source_images_list)
+        )
+        source_labels_list = source_labels_list * math.ceil(
+            len(target_labels_list) / len(source_labels_list)
+        )
+    else:
+        ds_repetition_value = math.ceil(
+            len(source_images_list) / len(target_images_list)
+        )
 
     source_ds = tf.data.Dataset.from_tensor_slices(
         (source_images_list, source_labels_list)
     )
     source_ds = (
-        source_ds.map(read_images, num_parallel_calls=cn.AUTOTUNE)
+        source_ds.map(
+            lambda x, y: (
+                read_images(x, params["resize"]),
+                y,
+            ),
+            num_parallel_calls=cn.AUTOTUNE,
+        )
         .cache()
         .shuffle(len(source_images_list), reshuffle_each_iteration=True)
     )
@@ -90,13 +107,24 @@ def prepare_office_ds(source_directory, target_directory, params):
     target_ds_original = tf.data.Dataset.from_tensor_slices(
         (target_images_list, target_labels_list)
     )
+
     target_ds_original = (
-        target_ds_original.map(read_images, num_parallel_calls=cn.AUTOTUNE)
+        target_ds_original.map(
+            lambda x, y: (
+                read_images(x, params["resize"]),
+                y,
+            ),
+            num_parallel_calls=cn.AUTOTUNE,
+        )
         .cache()
         .shuffle(len(target_images_list), reshuffle_each_iteration=True)
     )
 
-    target_ds = target_ds_original.repeat(ds_repetition_value)
+    target_ds = (
+        target_ds_original
+        if source_is_less
+        else target_ds_original.repeat(ds_repetition_value)
+    )
 
     source_images, target_images, source_labels, target_labels = [], [], [], []
     for x, y in tf.data.Dataset.zip((source_ds, target_ds)):
@@ -141,9 +169,6 @@ def augment(
 
     image0 = resize_and_rescale(image_source, new_size, source_is_greyscale)
     image1 = resize_and_rescale(image_target, new_size, target_is_greyscale)
-    # if int(channels) == 3:
-    #     if tf.random.uniform((), minval=0, maxval=1) < 0.1:
-    #         image = tf.tile(tf.image.rgb_to_grayscale(image), [1, 1, 3])
     image0 = tf.image.random_brightness(image0, max_delta=0.5)
     image0 = tf.image.random_contrast(image0, lower=0.1, upper=0.5)
     image0 = tf.image.adjust_saturation(image0, 3)
@@ -168,7 +193,7 @@ def fetch_data(params):
         source_directory = cn.OFFICE_DS_PATH / "webcam"
         target_directory = cn.OFFICE_DS_PATH / "amazon"
 
-        return prepare_office_ds(source_directory, target_directory, params)
+        return prepare_office_ds(source_directory, target_directory, params, True)
 
     elif params["combination"] == 4:
         source_directory = cn.OFFICE_DS_PATH / "webcam"
@@ -180,13 +205,13 @@ def fetch_data(params):
         source_directory = cn.OFFICE_DS_PATH / "dslr"
         target_directory = cn.OFFICE_DS_PATH / "amazon"
 
-        return prepare_office_ds(source_directory, target_directory, params)
+        return prepare_office_ds(source_directory, target_directory, params, True)
 
     elif params["combination"] == 6:
         source_directory = cn.OFFICE_DS_PATH / "dslr"
         target_directory = cn.OFFICE_DS_PATH / "webcam"
 
-        return prepare_office_ds(source_directory, target_directory, params)
+        return prepare_office_ds(source_directory, target_directory, params, True)
 
     elif (params["combination"]) == 7:
         (mnistx_train, mnisty_train), (_, _) = tf.keras.datasets.mnist.load_data()
@@ -196,10 +221,6 @@ def fetch_data(params):
         ds_train = tf.data.Dataset.from_tensor_slices(
             ((mnistx_train, mnistmx_train), mnisty_train)
         )
-
-        # ds_custom_val = tf.data.Dataset.from_tensor_slices(
-        #     (mnistmx_train, mnistmy_train)
-        # )
 
         ds_test = tf.data.Dataset.from_tensor_slices(
             ((mnistmx_train, mnistmx_train), mnistmy_train)
@@ -212,9 +233,9 @@ def fetch_data(params):
                 num_parallel_calls=cn.AUTOTUNE,
             )
             .cache()
+            .shuffle(mnisty_train.shape[0], reshuffle_each_iteration=True)
             .batch(params["batch_size"])
-            .prefetch(cn.AUTOTUNE)
-            # .shuffle(mnisty_train.shape[0])
+            .prefetch(buffer_size=cn.AUTOTUNE)
         )
 
         # Setup for test Dataset
@@ -232,19 +253,8 @@ def fetch_data(params):
                 num_parallel_calls=cn.AUTOTUNE,
             )
             .batch(params["batch_size"])
-            .prefetch(cn.AUTOTUNE)
+            .prefetch(buffer_size=cn.AUTOTUNE)
         )
-
-        # # Setup for Custom Val Dataset
-        # ds_custom_val = (
-        #     ds_custom_val.map(
-        #         (lambda x, y: (resize_and_rescale(x, params["resize"], False), y)),
-        #         num_parallel_calls=cn.AUTOTUNE,
-        #     )
-        #     .batch(params["batch_size"])
-        #     .prefetch(cn.AUTOTUNE)
-        # )
-
         train_count = [x for x in ds_train]
         tf.compat.v1.logging.info(
             "Batch count of training set: " + str(len(train_count))
@@ -279,8 +289,9 @@ def fetch_data(params):
                 num_parallel_calls=cn.AUTOTUNE,
             )
             .cache()
+            .shuffle(mnistmy_train.shape[0], reshuffle_each_iteration=True)
             .batch(params["batch_size"])
-            .prefetch(cn.AUTOTUNE)
+            .prefetch(buffer_size=cn.AUTOTUNE)
         )
 
         # Setup for test Dataset
@@ -298,7 +309,7 @@ def fetch_data(params):
                 num_parallel_calls=cn.AUTOTUNE,
             )
             .batch(params["batch_size"])
-            .prefetch(cn.AUTOTUNE)
+            .prefetch(buffer_size=cn.AUTOTUNE)
         )
 
         train_count = [x for x in ds_train]

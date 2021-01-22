@@ -17,7 +17,7 @@ def parse_args():
     parser.add_argument(
         "--combination",
         type=int,
-        default=1,
+        default=3,
         help="pass experiment combination, see config file",
     )
 
@@ -31,7 +31,7 @@ def parse_args():
     parser.add_argument(
         "--resize",
         type=int,
-        default=32,
+        default=227,
         help="pass image resizing dimension",
     )
 
@@ -53,7 +53,7 @@ def parse_args():
         "--prune", help="Target model will be optimized", default=False, type=bool
     )
 
-    parser.add_argument("--epochs", default=15, help="Epochs", type=int)
+    parser.add_argument("--epochs", default=50, help="Epochs", type=int)
 
     parser.add_argument(
         "--save_weights",
@@ -64,7 +64,7 @@ def parse_args():
 
     parser.add_argument(
         "--save_model",
-        default=False,
+        default=True,
         help="If yes, model will be saved, otherwise not",
         type=bool,
     )

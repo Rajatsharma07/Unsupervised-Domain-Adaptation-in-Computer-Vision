@@ -131,7 +131,7 @@ def callbacks_fn(params, my_dir):
     """Early Stopping Callback """
     early_stopping_callback = tf.keras.callbacks.EarlyStopping(
         monitor="val_loss",
-        patience=15,
+        patience=7,
         verbose=1,
         mode="auto",
     )

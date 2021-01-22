@@ -14,7 +14,7 @@ def merged_model(
     additional_loss=CORAL,
     freeze_upto=15,
 ):
-    source_model = create_model("source_fe", input_shape, freeze_upto)
+    source_model = create_model("source_fe", input_shape)
     for layer in source_model.layers:
         layer._name = layer.name + str("_1")
 
@@ -28,11 +28,17 @@ def merged_model(
     for layer in target_model.layers:
         layer._name = layer.name + str("_2")
 
-    for layer in source_model.layers[:15]:
-        layer.trainable = False
+    for idx, layer in enumerate(source_model.layers):
+        if idx < freeze_upto:
+            layer.trainable = False
+        else:
+            layer.trainable = True
 
-    for layer in target_model.layers[:15]:
-        layer.trainable = False
+    for idx, layer in enumerate(target_model.layers):
+        if idx < freeze_upto:
+            layer.trainable = False
+        else:
+            layer.trainable = True
 
     x = layers.Dropout(0.3)(source_model.output)
     prediction = tf.keras.layers.Dense(
@@ -386,7 +392,7 @@ def conv2d_bn(
     return x
 
 
-def create_model(name, input_shape=(227, 227, 3), freeze_upto=15):
+def create_model(name, input_shape=(227, 227, 3)):
     """[summary]
 
     Args:
@@ -400,17 +406,8 @@ def create_model(name, input_shape=(227, 227, 3), freeze_upto=15):
     base_model = tf.keras.applications.VGG16(
         include_top=False, weights="imagenet", input_shape=input_shape
     )
-    for idx, layer in enumerate(base_model.layers):
-        if idx < freeze_upto:
-            layer.trainable = False
-        else:
-            layer.trainable = True
-
     inputs = tf.keras.Input(shape=input_shape)
     x = base_model(inputs, training=False)
     x = tf.keras.layers.GlobalAveragePooling2D()(x)
-    # x = tf.keras.layers.Dropout(0.2)(x)
-    # x = tf.keras.layers.Dense(31, kernel_initializer=initializer, name="prediction")(x)
-
     model = tf.keras.models.Model(inputs=inputs, outputs=x, name=name)
     return model
