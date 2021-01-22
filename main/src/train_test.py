@@ -47,7 +47,7 @@ def train_test(params):
                 input_shape=(227, 227, 3),
                 num_classes=31,
                 lambda_loss=params["lambda_loss"],
-                additional_loss=CORAL,
+                additional_loss=coral_loss,
                 prune=params["prune"],
                 freeze_upto=15,
             )

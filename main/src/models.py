@@ -1,7 +1,7 @@
 import tensorflow as tf
 from tensorflow.keras import models, layers
 import src.config as cn
-from src.loss import CORAL
+from src.loss import CORAL, coral_loss
 import tensorflow_model_optimization as tfmot
 import numpy as np
 
@@ -11,7 +11,7 @@ def merged_model(
     prune,
     num_classes=31,
     lambda_loss=0.75,
-    additional_loss=CORAL,
+    additional_loss=coral_loss,
     freeze_upto=15,
 ):
     source_model = create_model("source_fe", input_shape)
@@ -54,7 +54,7 @@ def merged_model(
     )
 
     model.add_loss(additive_loss)
-    model.add_metric(additive_loss, name="domain_loss", aggregation="mean")
+    model.add_metric(additive_loss, name="domain_loss")
     return model
 
 
