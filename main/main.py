@@ -10,6 +10,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 physical_devices = tf.config.list_physical_devices("GPU")
 # tf.config.experimental.set_memory_growth(physical_devices[0], True)
 # tf.config.experimental.set_memory_growth(physical_devices[1], True)
+CUDA_VISIBLE_DEVICES = 7
 
 
 def parse_args():
@@ -17,7 +18,7 @@ def parse_args():
     parser.add_argument(
         "--combination",
         type=int,
-        default=3,
+        default=1,
         help="pass experiment combination, see config file",
     )
 
@@ -35,10 +36,10 @@ def parse_args():
         help="pass image resizing dimension",
     )
 
-    parser.add_argument("--batch_size", default=32, help="batch size", type=int)
+    parser.add_argument("--batch_size", default=16, help="batch size", type=int)
 
     parser.add_argument(
-        "--learning_rate", default=0.0001, help="Learning rate", type=float
+        "--learning_rate", default=0.001, help="Learning rate", type=float
     )
 
     parser.add_argument(
@@ -53,7 +54,7 @@ def parse_args():
         "--prune", help="Target model will be optimized", default=False, type=bool
     )
 
-    parser.add_argument("--epochs", default=50, help="Epochs", type=int)
+    parser.add_argument("--epochs", default=20, help="Epochs", type=int)
 
     parser.add_argument(
         "--save_weights",

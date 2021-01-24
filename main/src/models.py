@@ -11,7 +11,7 @@ def merged_model(
     prune,
     num_classes=31,
     lambda_loss=0.75,
-    additional_loss=coral_loss,
+    additional_loss=CORAL,
     freeze_upto=15,
 ):
     source_model = create_model("source_fe", input_shape)
@@ -395,21 +395,10 @@ def conv2d_bn(
 
 
 def create_model(name, input_shape=(227, 227, 3)):
-    """[summary]
-
-    Args:
-        name ([type]): [description]
-        input_shape (tuple, optional): [description]. Defaults to (227, 227, 3).
-
-    Returns:
-        [type]: [description]
-    """
-
     base_model = tf.keras.applications.VGG16(
         include_top=False, weights="imagenet", input_shape=input_shape
     )
-    inputs = tf.keras.Input(shape=input_shape)
-    x = base_model(inputs, training=False)
+    x = layers.Dropout(0.3)(base_model.output)
     x = tf.keras.layers.GlobalAveragePooling2D()(x)
-    model = tf.keras.models.Model(inputs=inputs, outputs=x, name=name)
+    model = tf.keras.models.Model(inputs=base_model.inputs, outputs=x, name=name)
     return model
