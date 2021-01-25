@@ -49,7 +49,7 @@ def train_test(params):
                 lambda_loss=params["lambda_loss"],
                 additional_loss=CORAL,
                 prune=params["prune"],
-                freeze_upto=15,
+                # freeze_upto=15,
             )
 
             # print(model.summary())
@@ -72,7 +72,7 @@ def train_test(params):
             lambda_loss=params["lambda_loss"],
             additional_loss=CORAL,
             prune=params["prune"],
-            freeze_upto=15,
+            # freeze_upto=15,
         )
 
         # print(model.summary())
@@ -88,12 +88,12 @@ def train_test(params):
     tf.compat.v1.logging.info("Creating the callbacks ...")
     callbacks, log_dir = utils.callbacks_fn(params, my_dir)
     # plot_model(model, os.path.join(log_dir, "Dual_Model.png"), show_shapes=True)
-    print_weights = tf.keras.callbacks.LambdaCallback(
-        on_epoch_end=lambda batch, logs: print(
-            model.get_layer("block5_conv2_2").get_weights()
-        )
-    )
-    callbacks.append(print_weights)
+    # print_weights = tf.keras.callbacks.LambdaCallback(
+    #     on_epoch_end=lambda batch, logs: print(
+    #         model.get_layer("block5_conv2_2").get_weights()
+    #     )
+    # )
+    # callbacks.append(print_weights)
 
     tf.compat.v1.logging.info("Calling data preprocessing pipeline...")
     ds_train, ds_test = fetch_data(params)

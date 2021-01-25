@@ -2,15 +2,16 @@ import tensorflow as tf
 import os
 import argparse
 from src.train_test import train_test
-from tensorflow.python.client import device_lib
 
-print(device_lib.list_local_devices())
+# from tensorflow.python.client import device_lib
+
+# print(device_lib.list_local_devices())
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+os.environ["CUDA_VISIBLE_DEVICES"] = "6,7"
 physical_devices = tf.config.list_physical_devices("GPU")
-# tf.config.experimental.set_memory_growth(physical_devices[0], True)
-# tf.config.experimental.set_memory_growth(physical_devices[1], True)
-CUDA_VISIBLE_DEVICES = 7
+tf.config.experimental.set_memory_growth(physical_devices[0], True)
+tf.config.experimental.set_memory_growth(physical_devices[1], True)
 
 
 def parse_args():
