@@ -53,7 +53,7 @@ def parse_args():
         "--prune", help="Target model will be optimized", default=False, type=bool
     )
 
-    parser.add_argument("--epochs", default=60, help="Epochs", type=int)
+    parser.add_argument("--epochs", default=50, help="Epochs", type=int)
 
     parser.add_argument(
         "--save_weights",

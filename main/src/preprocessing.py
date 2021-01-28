@@ -7,7 +7,7 @@ from src.utils import extract_mnist_m, shuffle_dataset, create_paths
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
 
-def augment_ds(image, label, prob=0.3):
+def augment_ds(image, label, prob=0.05):
 
     # Make Images Greyscale
     image = tf.cond(
@@ -27,10 +27,10 @@ def augment_ds(image, label, prob=0.3):
     )
 
     # Colour Augmentations
-    image = tf.image.random_hue(image, 0.08)
-    image = tf.image.random_saturation(image, 2, 5)
-    image = tf.image.random_brightness(image, max_delta=0.4)
-    image = tf.image.random_contrast(image, lower=0.7, upper=1.3)
+    image = tf.image.random_hue(image, 0.05)
+    image = tf.image.random_saturation(image, 0.5, 2)
+    image = tf.image.random_brightness(image, max_delta=0.2)
+    image = tf.image.random_contrast(image, lower=0.1, upper=0.8)
 
     # Rotating Images
     image = tf.cond(
