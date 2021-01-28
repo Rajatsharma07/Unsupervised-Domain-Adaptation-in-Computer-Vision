@@ -6,102 +6,47 @@ import tensorflow_model_optimization as tfmot
 import numpy as np
 
 
-# def merged_model(
-#     input_shape,
-#     prune,
-#     num_classes=31,
-#     lambda_loss=0.75,
-#     additional_loss=CORAL,
-#     freeze_upto=15,
-# ):
-#     source_model = create_model("source_fe", input_shape)
-#     for layer in source_model.layers:
-#         layer._name = layer.name + str("_1")
-
-#     if prune:
-#         target_model = tfmot.sparsity.keras.prune_low_magnitude(
-#             create_model("target_fe", input_shape, freeze_upto), **cn.pruning_params
-#         )
-#     else:
-#         target_model = create_model("target_fe", input_shape)
-
-#     for layer in target_model.layers:
-#         layer._name = layer.name + str("_2")
-
-#     for idx, layer in enumerate(source_model.layers):
-#         if idx < freeze_upto:
-#             layer.trainable = False
-#         else:
-#             layer.trainable = True
-
-#     for idx, layer in enumerate(target_model.layers):
-#         if idx < freeze_upto:
-#             layer.trainable = False
-#         else:
-#             layer.trainable = True
-
-#     x = layers.Dropout(0.3)(source_model.output)
-#     prediction = tf.keras.layers.Dense(
-#         31,
-#         kernel_initializer=tf.initializers.RandomNormal(0, 0.005),
-#         name="prediction",
-#     )(x)
-#     model = models.Model([source_model.input, target_model.input], prediction)
-#     additive_loss = additional_loss(
-#         source_output=source_model.output,
-#         target_output=target_model.output,
-#         percent_lambda=lambda_loss,
-#     )
-
-#     model.add_loss(additive_loss)
-#     model.add_metric(additive_loss, name="domain_loss")
-#     return model
-
-
 def merged_model(
     input_shape,
     prune,
-    weights=cn.MODEL_PATH / "pretrained_weights/bvlc_alexnet.npy",
     num_classes=31,
-    lambda_loss=0.50,
+    lambda_loss=0.75,
     additional_loss=CORAL,
+    freeze_upto=11,
 ):
-    source_model = AlexNet(
-        img_shape=input_shape, num_classes=num_classes, weights=weights
-    )
-    source_model._name = "Source"
+    source_model = create_model1("source_fe", input_shape)
     for layer in source_model.layers:
         layer._name = layer.name + str("_1")
 
-    # for layer in source_model.layers[:17]:
-    #     layer.trainable = False
-
     if prune:
         target_model = tfmot.sparsity.keras.prune_low_magnitude(
-            AlexNet(img_shape=input_shape, num_classes=num_classes, weights=weights),
-            **cn.pruning_params
+            create_model1("target_fe", input_shape, freeze_upto), **cn.pruning_params
         )
     else:
-        target_model = AlexNet(
-            img_shape=input_shape, num_classes=num_classes, weights=weights
-        )
+        target_model = create_model1("target_fe", input_shape)
 
-    target_model._name = "Target"
     for layer in target_model.layers:
         layer._name = layer.name + str("_2")
 
-    # for layer in target_model.layers[:17]:
-    #     layer.trainable = False
+    # for idx, layer in enumerate(source_model.layers):
+    #     if idx < freeze_upto:
+    #         layer.trainable = False
+    #     else:
+    #         layer.trainable = True
 
-    prediction = layers.Dense(
-        num_classes,
+    # for idx, layer in enumerate(target_model.layers):
+    #     if idx < freeze_upto:
+    #         layer.trainable = False
+    #     else:
+    #         layer.trainable = True
+
+    x = layers.Dropout(0.3)(source_model.output)
+    prediction = tf.keras.layers.Dense(
+        31,
         kernel_initializer=tf.initializers.RandomNormal(0, 0.005),
         name="prediction",
-    )(source_model.output)
-    model = models.Model(
-        [source_model.input, target_model.input], prediction, name="Full_Model"
-    )
-
+    )(x)
+    model = models.Model([source_model.input, target_model.input], prediction)
     additive_loss = additional_loss(
         source_output=source_model.output,
         target_output=target_model.output,
@@ -111,6 +56,61 @@ def merged_model(
     model.add_loss(additive_loss)
     model.add_metric(additive_loss, name="domain_loss")
     return model
+
+
+# def merged_model(
+#     input_shape,
+#     prune,
+#     weights=cn.MODEL_PATH / "pretrained_weights/bvlc_alexnet.npy",
+#     num_classes=31,
+#     lambda_loss=0.75,
+#     additional_loss=CORAL,
+# ):
+#     source_model = AlexNet(
+#         img_shape=input_shape, num_classes=num_classes, weights=weights
+#     )
+#     source_model._name = "Source"
+#     for layer in source_model.layers:
+#         layer._name = layer.name + str("_1")
+
+#     for layer in source_model.layers[:12]:
+#         layer.trainable = False
+
+#     if prune:
+#         target_model = tfmot.sparsity.keras.prune_low_magnitude(
+#             AlexNet(img_shape=input_shape, num_classes=num_classes, weights=weights),
+#             **cn.pruning_params
+#         )
+#     else:
+#         target_model = AlexNet(
+#             img_shape=input_shape, num_classes=num_classes, weights=weights
+#         )
+#     target_model._name = "Target"
+
+#     for layer in target_model.layers:
+#         layer._name = layer.name + str("_2")
+
+#     for layer in target_model.layers[:12]:
+#         layer.trainable = False
+
+#     prediction = layers.Dense(
+#         num_classes,
+#         kernel_initializer=tf.initializers.RandomNormal(0, 0.005),
+#         name="prediction",
+#     )(source_model.output)
+#     model = models.Model(
+#         [source_model.input, target_model.input], prediction, name="Full_Model"
+#     )
+
+#     additive_loss = additional_loss(
+#         source_output=source_model.output,
+#         target_output=target_model.output,
+#         percent_lambda=lambda_loss,
+#     )
+
+#     model.add_loss(additive_loss)
+#     model.add_metric(additive_loss, name="domain_loss")
+#     return model
 
 
 # def custom_alexnet(input_shape=(32, 32, 3)):
@@ -385,9 +385,20 @@ def conv2d_bn(
 
 def create_model(name, input_shape=(227, 227, 3)):
     base_model = tf.keras.applications.VGG16(
-        include_top=False, weights="imagenet", input_shape=input_shape
+        include_top=False, weights="imagenet", input_shape=input_shape, pooling="avg"
     )
-    x = layers.Dropout(0.3)(base_model.output)
-    x = tf.keras.layers.GlobalAveragePooling2D()(x)
-    model = tf.keras.models.Model(inputs=base_model.inputs, outputs=x, name=name)
+    # x = tf.keras.layers.GlobalAveragePooling2D()(base_model.output)
+    model = tf.keras.models.Model(
+        inputs=base_model.inputs, outputs=base_model.outputs, name=name
+    )
+    return model
+
+
+def create_model1(name, input_shape=(299, 299, 3)):
+    base_model = tf.keras.applications.Xception(
+        include_top=False, weights="imagenet", input_shape=input_shape, pooling="avg"
+    )
+    model = tf.keras.models.Model(
+        inputs=base_model.inputs, outputs=base_model.outputs, name=name
+    )
     return model

@@ -7,12 +7,12 @@ from src.utils import extract_mnist_m, shuffle_dataset, create_paths
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
 
-def augment_ds(image, label, prob=0.15):
+def augment_ds(image, label, prob=0.3):
 
     # Make Images Greyscale
     image = tf.cond(
         tf.random.uniform(shape=[], minval=0, maxval=1) < prob,
-        lambda: tf.tile(tf.image.rgb_to_grayscale(image), [1, 1, 3]),
+        lambda: tf.tile(tf.image.rgb_to_grayscale(image), [1, 1, 1, 3]),
         lambda: image,
     )
 
@@ -51,27 +51,23 @@ def resize_and_rescale(image, new_size, is_greyscale):
     if is_greyscale:
         image = tf.expand_dims(image, axis=-1)
         image = tf.image.grayscale_to_rgb(image)
-    image = tf.image.resize(
-        image,
-        [new_size, new_size],
-        method="nearest",
-    )
+    image = tf.image.resize(image, [new_size, new_size], method="nearest",)
     image = image / 255.0
 
     return image
 
 
-def read_images(file, new_size):
+def read_images1(file, new_size):
     image = tf.io.read_file(file)
     image = tf.image.decode_jpeg(image, channels=3)
     image = tf.cast(image, tf.float32)
-    image = tf.keras.applications.vgg16.preprocess_input(image)
+    image = tf.keras.applications.xception.preprocess_input(image)
     image = tf.image.resize(image, [new_size, new_size], method="nearest")
     image = image / 255.0
     return image
 
 
-def read_images1(directory, batch_size, new_size):
+def read_images(directory, batch_size, new_size):
     ds = tf.keras.preprocessing.image_dataset_from_directory(
         directory,
         labels="inferred",
@@ -86,133 +82,131 @@ def read_images1(directory, batch_size, new_size):
 def preprocess(image, label):
     # Cast to float32
     image = tf.cast(image, tf.float32)
-    image = tf.keras.applications.vgg16.preprocess_input(image)
-    image = image / 255.0
+    image = tf.keras.applications.xception.preprocess_input(image)
+    # image = image / 255.0
 
     return image, label
 
 
 def prepare_office_ds(source_directory, target_directory, params):
 
-    source_images_list, source_labels_list = create_paths(source_directory)
-    target_images_list, target_labels_list = create_paths(target_directory)
-    # source_ds_original = read_images(
-    #     source_directory, params["batch_size"], params["resize"]
-    # )
-    # target_ds_original = read_images(
-    #     target_directory, params["batch_size"], params["resize"]
-    # )
+    # source_images_list, source_labels_list = create_paths(source_directory)
+    # target_images_list, target_labels_list = create_paths(target_directory)
 
-    # source_ds_original = source_ds_original.map(
-    #     preprocess, num_parallel_calls=tf.data.experimental.AUTOTUNE
-    # )
+    source_ds_original = read_images(
+        source_directory, params["batch_size"], params["resize"]
+    )
+    target_ds_original = read_images(
+        target_directory, params["batch_size"], params["resize"]
+    )
 
-    # target_ds_original = target_ds_original.map(
-    #     preprocess, num_parallel_calls=tf.data.experimental.AUTOTUNE
-    # )
+    source_ds_original = source_ds_original.map(
+        preprocess, num_parallel_calls=tf.data.experimental.AUTOTUNE
+    )
 
-    # length_source_images = source_ds_original.cardinality().numpy()
-    # length_target_images = target_ds_original.cardinality().numpy()
+    target_ds_original = target_ds_original.map(
+        preprocess, num_parallel_calls=tf.data.experimental.AUTOTUNE
+    )
 
-    # if length_source_images < length_target_images:
-    #     source_ds = source_ds_original.repeat(
-    #         math.ceil(length_target_images / length_source_images)
+    length_source_images = source_ds_original.cardinality().numpy()
+    tf.compat.v1.logging.info(f"length_source_images: {length_source_images}")
+    length_target_images = target_ds_original.cardinality().numpy()
+    tf.compat.v1.logging.info(f"length_target_images: {length_target_images}")
+
+    if length_source_images < length_target_images:
+        source_ds = source_ds_original.repeat(
+            math.ceil(length_target_images / length_source_images)
+        )
+        target_ds = target_ds_original
+    elif length_source_images > length_target_images:
+        target_ds = target_ds_original.repeat(
+            math.ceil(length_source_images / length_target_images)
+        )
+        source_ds = source_ds_original
+
+    else:
+        source_ds = source_ds_original
+        target_ds = target_ds_original
+
+    # if len(source_labels_list) < len(target_images_list):
+    #     source_images_list = source_images_list * math.ceil(
+    #         len(target_images_list) / len(source_images_list)
     #     )
-    #     target_ds = target_ds_original
-    # elif length_source_images > length_target_images:
-    #     target_ds = target_ds_original.repeat(
-    #         math.ceil(length_source_images / length_target_images)
+
+    #     source_labels_list = source_labels_list * math.ceil(
+    #         len(target_labels_list) / len(source_labels_list)
     #     )
-    #     source_ds = source_ds_original
+    # elif len(source_labels_list) > len(target_images_list):
+    #     repetition = math.ceil(len(source_images_list) / len(target_images_list))
 
-    # else:
-    #     source_ds = source_ds_original
-    #     target_ds = target_ds_original
-    if len(source_labels_list) < len(target_images_list):
-        source_images_list = source_images_list * math.ceil(
-            len(target_images_list) / len(source_images_list)
-        )
-
-        source_labels_list = source_labels_list * math.ceil(
-            len(target_labels_list) / len(source_labels_list)
-        )
-    elif len(source_labels_list) > len(target_images_list):
-        repetition = math.ceil(len(source_images_list) / len(target_images_list))
-
-    source_ds = tf.data.Dataset.from_tensor_slices(
-        (source_images_list, source_labels_list)
-    )
-
-    source_ds = (
-        source_ds.map(
-            lambda x, y: (
-                read_images(x, params["resize"]),
-                y,
-            ),
-            num_parallel_calls=cn.AUTOTUNE,
-        )
-        .cache()
-        .shuffle(len(source_images_list), reshuffle_each_iteration=True)
-    )
-
-    # source_ds = source_ds.map(augment_ds, num_parallel_calls=cn.AUTOTUNE)
-
-    target_ds_original = tf.data.Dataset.from_tensor_slices(
-        (target_images_list, target_labels_list)
-    )
-
-    target_ds_original = (
-        target_ds_original.map(
-            lambda x, y: (
-                read_images(x, params["resize"]),
-                y,
-            ),
-            num_parallel_calls=cn.AUTOTUNE,
-        )
-        .cache()
-        .shuffle(len(target_images_list), reshuffle_each_iteration=True)
-    )
-
-    target_ds = (
-        target_ds_original.repeat(repetition)
-        if len(source_labels_list) > len(target_images_list)
-        else target_ds_original
-    )
-
-    source_images, target_images, source_labels, target_labels = [], [], [], []
-    for x, y in tf.data.Dataset.zip((source_ds, target_ds)):
-        source_images.append(x[0])
-        target_images.append(y[0])
-        source_labels.append(x[1])
-        # target_labels.append(y[1])
-
-    ds_train = (
-        tf.data.Dataset.from_tensor_slices(
-            ((source_images, target_images), source_labels)
-        )
-        .batch(params["batch_size"])
-        .prefetch(buffer_size=cn.AUTOTUNE)
-    )
-
-    # ds_train = tf.data.Dataset.zip((source_ds, target_ds)).map(
-    #     lambda x, y: ((x[0], y[0]), x[1]), num_parallel_calls=cn.AUTOTUNE
+    # source_ds = tf.data.Dataset.from_tensor_slices(
+    #     (source_images_list, source_labels_list)
     # )
-    # ds_train = ds_train.prefetch(buffer_size=cn.AUTOTUNE)
 
-    x1, y1 = [], []
-    for x, y in target_ds_original:
-        x1.append(x)
-        y1.append(y)
-
-    ds_test = (
-        tf.data.Dataset.from_tensor_slices(((x1, x1), y1))
-        .batch(params["batch_size"])
-        .prefetch(buffer_size=cn.AUTOTUNE)
-    )
-
-    # ds_test = target_ds_original.map(lambda x, y: ((x, x), y)).prefetch(
-    #     buffer_size=cn.AUTOTUNE
+    # source_ds = (
+    #     source_ds.map(
+    #         lambda x, y: (read_images(x, params["resize"]), y,),
+    #         num_parallel_calls=cn.AUTOTUNE,
+    #     )
+    #     .cache()
+    #     .shuffle(len(source_images_list), reshuffle_each_iteration=True)
     # )
+
+    source_ds = source_ds.map(augment_ds, num_parallel_calls=cn.AUTOTUNE)
+
+    # target_ds_original = tf.data.Dataset.from_tensor_slices(
+    #     (target_images_list, target_labels_list)
+    # )
+
+    # target_ds_original = (
+    #     target_ds_original.map(
+    #         lambda x, y: (read_images(x, params["resize"]), y,),
+    #         num_parallel_calls=cn.AUTOTUNE,
+    #     )
+    #     .cache()
+    #     .shuffle(len(target_images_list), reshuffle_each_iteration=True)
+    # )
+
+    # target_ds = (
+    #     target_ds_original.repeat(repetition)
+    #     if len(source_labels_list) > len(target_images_list)
+    #     else target_ds_original
+    # )
+
+    # source_images, target_images, source_labels, target_labels = [], [], [], []
+    # for x, y in tf.data.Dataset.zip((source_ds, target_ds)):
+    #     source_images.append(x[0])
+    #     target_images.append(y[0])
+    #     source_labels.append(x[1])
+    #     # target_labels.append(y[1])
+
+    # ds_train = (
+    #     tf.data.Dataset.from_tensor_slices(
+    #         ((source_images, target_images), source_labels)
+    #     )
+    #     .batch(params["batch_size"])
+    #     .prefetch(buffer_size=cn.AUTOTUNE)
+    # )
+
+    ds_train = tf.data.Dataset.zip((source_ds, target_ds)).map(
+        lambda x, y: ((x[0], y[0]), x[1]), num_parallel_calls=cn.AUTOTUNE
+    )
+    ds_train = ds_train.prefetch(buffer_size=cn.AUTOTUNE)
+
+    # x1, y1 = [], []
+    # for x, y in target_ds_original:
+    #     x1.append(x)
+    #     y1.append(y)
+
+    # ds_test = (
+    #     tf.data.Dataset.from_tensor_slices(((x1, x1), y1))
+    #     .batch(params["batch_size"])
+    #     .prefetch(buffer_size=cn.AUTOTUNE)
+    # )
+
+    ds_test = target_ds_original.map(lambda x, y: ((x, x), y)).prefetch(
+        buffer_size=cn.AUTOTUNE
+    )
 
     train_count = [x for x in ds_train]
     tf.compat.v1.logging.info("Batch count of training set: " + str(len(train_count)))

@@ -10,6 +10,8 @@ from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D, BatchNormalizat
 from tensorflow.keras.layers import Dropout, Flatten, Dense, concatenate, ReLU, Lambda
 import numpy as np
 
+os.environ["CUDA_VISIBLE_DEVICES"] = "7"
+
 initializer = tf.keras.initializers.he_normal()
 BASE_DIR = Path()  # Base path
 OFFICE_DS_PATH = BASE_DIR / Path("data/office/")
@@ -417,9 +419,7 @@ model = AlexNet()
 # model = create_model("Testing")
 model.compile(
     optimizer=keras.optimizers.Adam(learning_rate=0.0001),
-    loss=[
-        keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    ],
+    loss=[keras.losses.SparseCategoricalCrossentropy(from_logits=True),],
     metrics=["accuracy"],
 )
 

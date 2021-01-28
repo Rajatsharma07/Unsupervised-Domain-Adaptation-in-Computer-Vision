@@ -24,7 +24,7 @@ DATASET_COMBINATION = {
     "GTSRB_to_SynSigns": 10,
 }
 
-Loss = {1: "CORAL", 2: "Other"}
+Architecture = {1: "ALexNet", 2: "Vgg16", 3: "Xception"}
 
 pruning_params = {
     "pruning_schedule": tfmot.sparsity.keras.ConstantSparsity(

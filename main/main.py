@@ -8,10 +8,10 @@ from src.train_test import train_test
 # print(device_lib.list_local_devices())
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
-os.environ["CUDA_VISIBLE_DEVICES"] = "6,7"
+os.environ["CUDA_VISIBLE_DEVICES"] = "7"
 physical_devices = tf.config.list_physical_devices("GPU")
 tf.config.experimental.set_memory_growth(physical_devices[0], True)
-tf.config.experimental.set_memory_growth(physical_devices[1], True)
+# tf.config.experimental.set_memory_growth(physical_devices[1], True)
 
 
 def parse_args():
@@ -24,23 +24,21 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--loss",
-        type=int,
-        default="1",
-        help="1 CORAL, see config file",
+        "--architecture", type=int, default="1", help="1 AlexNet, see config file",
     )
 
     parser.add_argument(
-        "--resize",
-        type=int,
-        default=227,
-        help="pass image resizing dimension",
+        "--freeze_upto", type=int, default="1", help="1 AlexNet, see config file",
+    )
+
+    parser.add_argument(
+        "--resize", type=int, default=227, help="pass image resizing dimension",
     )
 
     parser.add_argument("--batch_size", default=16, help="batch size", type=int)
 
     parser.add_argument(
-        "--learning_rate", default=0.001, help="Learning rate", type=float
+        "--learning_rate", default=0.0001, help="Learning rate", type=float
     )
 
     parser.add_argument(
@@ -48,14 +46,14 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--lambda_loss", help="Additional loss lambda value", default=0.50, type=float
+        "--lambda_loss", help="Additional loss lambda value", default=0.75, type=float
     )
 
     parser.add_argument(
         "--prune", help="Target model will be optimized", default=False, type=bool
     )
 
-    parser.add_argument("--epochs", default=20, help="Epochs", type=int)
+    parser.add_argument("--epochs", default=60, help="Epochs", type=int)
 
     parser.add_argument(
         "--save_weights",

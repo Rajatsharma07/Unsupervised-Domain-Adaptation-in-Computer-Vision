@@ -15,7 +15,7 @@ def train_test(params):
     my_dir = (
         str(params["combination"])
         + "_"
-        + str(params["loss"])
+        + str(params["architecture"])
         + "_"
         + str(params["lambda_loss"])
     )
@@ -30,7 +30,9 @@ def train_test(params):
         params["mode"].lower() == "train_test"
     ), "change training mode to 'train_test'"
 
-    tf.compat.v1.logging.info("Fetched the loss function: " + cn.Loss[params["loss"]])
+    tf.compat.v1.logging.info(
+        "Fetched the architecture function: " + cn.Architecture[params["architecture"]]
+    )
 
     if params["use_multiGPU"]:
         # Create a MirroredStrategy.
@@ -44,12 +46,12 @@ def train_test(params):
             tf.compat.v1.logging.info("Building the model ...")
 
             model = merged_model(
-                input_shape=(227, 227, 3),
+                input_shape=(299, 299, 3),
                 num_classes=31,
                 lambda_loss=params["lambda_loss"],
                 additional_loss=CORAL,
                 prune=params["prune"],
-                # freeze_upto=15,
+                freeze_upto=params["freeze_upto"],
             )
 
             # print(model.summary())
@@ -67,12 +69,12 @@ def train_test(params):
         model = None
 
         model = merged_model(
-            input_shape=(227, 227, 3),
+            input_shape=(299, 299, 3),
             num_classes=31,
             lambda_loss=params["lambda_loss"],
             additional_loss=CORAL,
             prune=params["prune"],
-            # freeze_upto=15,
+            freeze_upto=params["freeze_upto"],
         )
 
         # print(model.summary())
@@ -80,7 +82,7 @@ def train_test(params):
         tf.compat.v1.logging.info("Compiling the model ...")
         model.compile(
             optimizer=keras.optimizers.Adam(learning_rate=params["learning_rate"]),
-            loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
+            loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
             metrics=["accuracy"],
         )
 
@@ -113,9 +115,7 @@ def train_test(params):
     """ Plotting """
     tf.compat.v1.logging.info("Creating accuracy & loss plots...")
     utils.loss_accuracy_plots(
-        hist=hist,
-        log_dir=log_dir,
-        params=params,
+        hist=hist, log_dir=log_dir, params=params,
     )
 
     """ Model Saving """
@@ -125,7 +125,7 @@ def train_test(params):
             cn.MODEL_PATH, (Path(log_dir).parent).name, Path(log_dir).name
         )
         Path(model_path).mkdir(parents=True, exist_ok=True)
-        model.save(os.path.join(model_path, "model.h5"))
+        model.save(os.path.join(model_path, "model"))
         tf.compat.v1.logging.info(f"Model successfully saved at: {model_path}")
 
     """ Evaluate on Target Dataset"""
