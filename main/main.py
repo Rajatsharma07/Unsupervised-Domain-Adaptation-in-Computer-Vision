@@ -27,15 +27,15 @@ def parse_args():
         "--architecture", type=int, default="1", help="1 AlexNet, see config file",
     )
 
-    parser.add_argument(
-        "--freeze_upto", type=int, default="1", help="1 AlexNet, see config file",
-    )
+    # parser.add_argument(
+    #     "--freeze_upto", type=int, default="1", help="1 AlexNet, see config file",
+    # )
 
     parser.add_argument(
         "--resize", type=int, default=227, help="pass image resizing dimension",
     )
 
-    parser.add_argument("--batch_size", default=16, help="batch size", type=int)
+    parser.add_argument("--batch_size", default=8, help="batch size", type=int)
 
     parser.add_argument(
         "--learning_rate", default=0.0001, help="Learning rate", type=float

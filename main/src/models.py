@@ -4,6 +4,34 @@ import src.config as cn
 from src.loss import CORAL, coral_loss
 import tensorflow_model_optimization as tfmot
 import numpy as np
+import os
+import tempfile
+
+
+def add_regularization(model, regularizer=tf.keras.regularizers.l2(0.0001)):
+
+    if not isinstance(regularizer, tf.keras.regularizers.Regularizer):
+        print("Regularizer must be a subclass of tf.keras.regularizers.Regularizer")
+        return model
+
+    for layer in model.layers:
+        for attr in ["kernel_regularizer"]:
+            if hasattr(layer, attr):
+                setattr(layer, attr, regularizer)
+
+    # When we change the layers attributes, the change only happens in the model config file
+    model_json = model.to_json()
+
+    # Save the weights before reloading the model.
+    tmp_weights_path = os.path.join(tempfile.gettempdir(), "tmp_weights.h5")
+    model.save_weights(tmp_weights_path)
+
+    # load the model from the config
+    model = tf.keras.models.model_from_json(model_json)
+
+    # Reload the model weights
+    model.load_weights(tmp_weights_path, by_name=True)
+    return model
 
 
 def merged_model(
@@ -12,21 +40,27 @@ def merged_model(
     num_classes=31,
     lambda_loss=0.75,
     additional_loss=CORAL,
-    freeze_upto=11,
 ):
-    source_model = create_model1("source_fe", input_shape)
+    source_model = create_model("source_fe", input_shape)
+
+    ip1 = tf.keras.Input(shape=(input_shape))
+    ip2 = tf.keras.Input(shape=(input_shape))
+
     for layer in source_model.layers:
         layer._name = layer.name + str("_1")
 
     if prune:
         target_model = tfmot.sparsity.keras.prune_low_magnitude(
-            create_model1("target_fe", input_shape, freeze_upto), **cn.pruning_params
+            create_model("target_fe", input_shape), **cn.pruning_params
         )
     else:
-        target_model = create_model1("target_fe", input_shape)
+        target_model = create_model("target_fe", input_shape)
 
     for layer in target_model.layers:
         layer._name = layer.name + str("_2")
+
+    op1 = source_model(ip1, training=False)
+    op2 = target_model(ip2, training=False)
 
     # for idx, layer in enumerate(source_model.layers):
     #     if idx < freeze_upto:
@@ -40,17 +74,13 @@ def merged_model(
     #     else:
     #         layer.trainable = True
 
-    x = layers.Dropout(0.3)(source_model.output)
+    x = layers.Dropout(0.4)(op1)
     prediction = tf.keras.layers.Dense(
-        31,
-        kernel_initializer=tf.initializers.RandomNormal(0, 0.005),
-        name="prediction",
+        31, kernel_initializer=cn.initializer, name="prediction",
     )(x)
-    model = models.Model([source_model.input, target_model.input], prediction)
+    model = models.Model([ip1, ip2], prediction)
     additive_loss = additional_loss(
-        source_output=source_model.output,
-        target_output=target_model.output,
-        percent_lambda=lambda_loss,
+        source_output=op1, target_output=op2, percent_lambda=lambda_loss,
     )
 
     model.add_loss(additive_loss)
@@ -383,18 +413,7 @@ def conv2d_bn(
     return x
 
 
-def create_model(name, input_shape=(227, 227, 3)):
-    base_model = tf.keras.applications.VGG16(
-        include_top=False, weights="imagenet", input_shape=input_shape, pooling="avg"
-    )
-    # x = tf.keras.layers.GlobalAveragePooling2D()(base_model.output)
-    model = tf.keras.models.Model(
-        inputs=base_model.inputs, outputs=base_model.outputs, name=name
-    )
-    return model
-
-
-def create_model1(name, input_shape=(299, 299, 3)):
+def create_model(name, input_shape=(299, 299, 3)):
     base_model = tf.keras.applications.Xception(
         include_top=False, weights="imagenet", input_shape=input_shape, pooling="avg"
     )

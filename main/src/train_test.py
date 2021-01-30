@@ -51,7 +51,7 @@ def train_test(params):
                 lambda_loss=params["lambda_loss"],
                 additional_loss=CORAL,
                 prune=params["prune"],
-                freeze_upto=params["freeze_upto"],
+                # freeze_upto=params["freeze_upto"],
             )
 
             # print(model.summary())
@@ -74,7 +74,7 @@ def train_test(params):
             lambda_loss=params["lambda_loss"],
             additional_loss=CORAL,
             prune=params["prune"],
-            freeze_upto=params["freeze_upto"],
+            # freeze_upto=params["freeze_upto"],
         )
 
         # print(model.summary())

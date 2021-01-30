@@ -2,12 +2,12 @@ import os
 import tensorflow as tf
 import src.config as cn
 import math
-from src.utils import extract_mnist_m, shuffle_dataset, create_paths
+from src.utils import extract_mnist_m, shuffle_dataset
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
 
-def augment_ds(image, label, prob=0.05):
+def augment_ds(image, label, prob=0.2):
 
     # Make Images Greyscale
     image = tf.cond(
@@ -16,32 +16,32 @@ def augment_ds(image, label, prob=0.05):
         lambda: image,
     )
 
-    # Adding Gaussian Noise
-    noise = tf.random.normal(
-        shape=tf.shape(image), mean=0.0, stddev=1, dtype=tf.float32
-    )
-    image = tf.cond(
-        tf.random.uniform(shape=[], minval=0, maxval=1) < prob,
-        lambda: tf.add(image, noise),
-        lambda: image,
-    )
+    # # Adding Gaussian Noise
+    # noise = tf.random.normal(
+    #     shape=tf.shape(image), mean=0.0, stddev=1, dtype=tf.float32
+    # )
+    # image = tf.cond(
+    #     tf.random.uniform(shape=[], minval=0, maxval=1) < prob,
+    #     lambda: tf.add(image, noise),
+    #     lambda: image,
+    # )
 
     # Colour Augmentations
     image = tf.image.random_hue(image, 0.05)
-    image = tf.image.random_saturation(image, 0.5, 2)
-    image = tf.image.random_brightness(image, max_delta=0.2)
-    image = tf.image.random_contrast(image, lower=0.1, upper=0.8)
+    image = tf.image.random_saturation(image, 0.8, 2.5)
+    image = tf.image.random_brightness(image, max_delta=0.4)
+    image = tf.image.random_contrast(image, lower=0.3, upper=1.2)
 
-    # Rotating Images
-    image = tf.cond(
-        tf.random.uniform(shape=[], minval=0, maxval=1) < prob,
-        lambda: tf.image.rot90(image, k=1),
-        lambda: tf.image.rot90(image, k=3),
-    )
+    # # Rotating Images
+    # image = tf.cond(
+    #     tf.random.uniform(shape=[], minval=0, maxval=1) < prob,
+    #     lambda: tf.image.rot90(image, k=1),
+    #     lambda: tf.image.rot90(image, k=3),
+    # )
 
     # Flipping Images
     image = tf.image.random_flip_left_right(image)
-    image = tf.image.random_flip_up_down(image)
+    # image = tf.image.random_flip_up_down(image)
 
     return image, label
 
