@@ -1,6 +1,5 @@
 import tensorflow as tf
 from pathlib import Path
-import tensorflow_model_optimization as tfmot
 
 initializer = tf.keras.initializers.he_normal()  # Layer initializations
 
@@ -17,17 +16,7 @@ DATASET_COMBINATION = {
     "Webcam_to_Amazon": 3,
     "Webcam_to_DSLR": 4,
     "DSLR_to_Amazon": 5,
-    "DSLR_to_Webcam": 6,
-    "MNIST_to_MNISTM": 7,
-    "MNISTM_to_MNIST": 8,
-    "SynSigns_to_GTSRB": 9,
-    "GTSRB_to_SynSigns": 10,
+    "SynSigns_to_GTSRB": 6,
 }
 
 Architecture = {1: "ALexNet", 2: "Vgg16", 3: "Xception"}
-
-pruning_params = {
-    "pruning_schedule": tfmot.sparsity.keras.ConstantSparsity(
-        0.20, 0, end_step=-1, frequency=1
-    )
-}

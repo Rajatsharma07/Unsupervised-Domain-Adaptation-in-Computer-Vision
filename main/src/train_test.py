@@ -2,6 +2,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.utils import plot_model
 import os
+import tensorflow_model_optimization as tfmot
 from pathlib import Path
 import src.config as cn
 from src.models import merged_model
@@ -19,6 +20,9 @@ def train_test(params):
         + "_"
         + str(params["lambda_loss"])
     )
+
+    if params["prune"]:
+        my_dir = my_dir + "_1"
 
     assert os.path.exists(cn.LOGS_DIR), "LOGS_DIR doesn't exist"
     experiment_logs_path = os.path.join(cn.LOGS_DIR, my_dir)
@@ -51,7 +55,7 @@ def train_test(params):
                 lambda_loss=params["lambda_loss"],
                 additional_loss=CORAL,
                 prune=params["prune"],
-                # freeze_upto=params["freeze_upto"],
+                prune_val=params["prune_val"],
             )
 
             # print(model.summary())
@@ -74,7 +78,7 @@ def train_test(params):
             lambda_loss=params["lambda_loss"],
             additional_loss=CORAL,
             prune=params["prune"],
-            # freeze_upto=params["freeze_upto"],
+            prune_val=params["prune_val"],
         )
 
         # print(model.summary())
@@ -89,13 +93,6 @@ def train_test(params):
     """ Create callbacks """
     tf.compat.v1.logging.info("Creating the callbacks ...")
     callbacks, log_dir = utils.callbacks_fn(params, my_dir)
-    # plot_model(model, os.path.join(log_dir, "Dual_Model.png"), show_shapes=True)
-    # print_weights = tf.keras.callbacks.LambdaCallback(
-    #     on_epoch_end=lambda batch, logs: print(
-    #         model.get_layer("block5_conv2_2").get_weights()
-    #     )
-    # )
-    # callbacks.append(print_weights)
 
     tf.compat.v1.logging.info("Calling data preprocessing pipeline...")
     ds_train, ds_test = fetch_data(params)
@@ -127,10 +124,35 @@ def train_test(params):
         Path(model_path).mkdir(parents=True, exist_ok=True)
         model.save(os.path.join(model_path, "model"))
         tf.compat.v1.logging.info(f"Model successfully saved at: {model_path}")
+        tf.compat.v1.logging.info(f"Pruned Model summary: {model.summary()}")
+
+    # """ Pruned Model Saving """
+    # if params["prune"]:
+    #     model_for_export = tfmot.sparsity.keras.strip_pruning(model)
+    #     tf.compat.v1.logging.info(f"Pruned Model summary: {model_for_export.summary()}")
+
+    #     tf.compat.v1.logging.info("Saving Pruned Model...")
+    #     model_path = os.path.join(
+    #         cn.MODEL_PATH, (Path(log_dir).parent).name, Path(log_dir).name
+    #     )
+    #     Path(model_path).mkdir(parents=True, exist_ok=True)
+    #     model_for_export.save(os.path.join(model_path, "pruned_model"))
+    #     tf.compat.v1.logging.info(f"Pruned Model successfully saved at: {model_path}")
+
+    #     tf.compat.v1.logging.info(
+    #         "Size of gzipped pruned model without stripping: %.2f bytes"
+    #         % (utils.get_gzipped_model_size(model))
+    #     )
+
+    #     tf.compat.v1.logging.info(
+    #         "Size of gzipped pruned model with stripping: %.2f bytes"
+    #         % (utils.get_gzipped_model_size(model_for_export))
+    #     )
 
     """ Evaluate on Target Dataset"""
     results = model.evaluate(ds_test)
     tf.compat.v1.logging.info(
         f"Test Set evaluation results for run {Path(log_dir).name} : Accuracy: {results[1]}, Loss: {results[0]}"
     )
+
     return model, hist, results

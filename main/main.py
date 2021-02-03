@@ -10,8 +10,8 @@ from src.train_test import train_test
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 os.environ["CUDA_VISIBLE_DEVICES"] = "7"
 physical_devices = tf.config.list_physical_devices("GPU")
-tf.config.experimental.set_memory_growth(physical_devices[0], True)
-# tf.config.experimental.set_memory_growth(physical_devices[1], True)
+for device in physical_devices:
+    tf.config.experimental.set_memory_growth(device, True)
 
 
 def parse_args():
@@ -19,7 +19,7 @@ def parse_args():
     parser.add_argument(
         "--combination",
         type=int,
-        default=1,
+        default=6,
         help="pass experiment combination, see config file",
     )
 
@@ -27,15 +27,15 @@ def parse_args():
         "--architecture", type=int, default="1", help="1 AlexNet, see config file",
     )
 
-    # parser.add_argument(
-    #     "--freeze_upto", type=int, default="1", help="1 AlexNet, see config file",
-    # )
-
     parser.add_argument(
-        "--resize", type=int, default=227, help="pass image resizing dimension",
+        "--prune_val", type=float, default=0.10, help="1 AlexNet, see config file",
     )
 
-    parser.add_argument("--batch_size", default=8, help="batch size", type=int)
+    parser.add_argument(
+        "--resize", type=int, default=299, help="pass image resizing dimension",
+    )
+
+    parser.add_argument("--batch_size", default=16, help="batch size", type=int)
 
     parser.add_argument(
         "--learning_rate", default=0.0001, help="Learning rate", type=float
@@ -50,14 +50,14 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--prune", help="Target model will be optimized", default=False, type=bool
+        "--prune", help="Target model will be optimized", default=True, type=bool
     )
 
-    parser.add_argument("--epochs", default=50, help="Epochs", type=int)
+    parser.add_argument("--epochs", default=5, help="Epochs", type=int)
 
     parser.add_argument(
         "--save_weights",
-        default=True,
+        default=False,
         help="If yes, weights will be saved, otherwise not",
         type=bool,
     )

@@ -8,6 +8,8 @@ from tensorflow.keras.callbacks import CSVLogger
 import datetime
 import src.config as cn
 import numpy as np
+import tensorflow_model_optimization as tfmot
+import tempfile
 
 
 def define_logger(log_file):
@@ -92,8 +94,8 @@ def extract_mnist_m(mnistm_path):
 def callbacks_fn(params, my_dir):
 
     callback_list = []
-    """Tensorboard Callback """
 
+    """Tensorboard Callback """
     tb_logdir = os.path.join(cn.LOGS_DIR, my_dir)
     Path(tb_logdir).mkdir(parents=True, exist_ok=True)
     assert os.path.exists(tb_logdir), "tb_logdir doesn't exist"
@@ -103,10 +105,12 @@ def callbacks_fn(params, my_dir):
     log_dir = tb_logdir
     # file_writer = tf.summary.create_file_writer(tb_logdir + "/custom_evaluation")
     # file_writer.set_as_default()
-    tensorboard_callback = tf.keras.callbacks.TensorBoard(tb_logdir, histogram_freq=1)
-    callback_list.append(tensorboard_callback)
-    # print(f"\nTensorboard logs path: {tb_logdir}\n")
-    tf.compat.v1.logging.info(f"Tensorboard logs path: {tb_logdir}")
+    if not params["prune"]:
+        tensorboard_callback = tf.keras.callbacks.TensorBoard(
+            tb_logdir, histogram_freq=1
+        )
+        callback_list.append(tensorboard_callback)
+        tf.compat.v1.logging.info(f"Tensorboard logs path: {tb_logdir}")
 
     """CSV Logger Callback """
     Path(log_dir).mkdir(parents=True, exist_ok=True)
@@ -150,6 +154,13 @@ def callbacks_fn(params, my_dir):
         # print(f"\nModel Checkpoint path: {checkpoint_path}\n")
         tf.compat.v1.logging.info(f"Model Checkpoint path: {checkpoint_path}")
 
+    """Pruning Callback """
+    if params["prune"]:
+        tf.compat.v1.logging.info(f"Tensorboard logs path: {tb_logdir}")
+        callback_list.append(tfmot.sparsity.keras.UpdatePruningStep())
+        # Log sparsity and other metrics in Tensorboard.
+        callback_list.append(tfmot.sparsity.keras.PruningSummaries(log_dir=tb_logdir))
+
     return callback_list, log_dir
 
 
@@ -173,3 +184,18 @@ def shuffle_dataset(data_x, data_Y):
     data_x = data_x[index_shuffled]
     data_Y = (np.array(data_Y))[index_shuffled]
     return data_x, data_Y
+
+
+def get_gzipped_model_size(model):
+    # Returns size of gzipped model, in bytes.
+    import os
+    import zipfile
+
+    _, keras_file = tempfile.mkstemp(".h5")
+    model.save(keras_file, include_optimizer=False)
+
+    _, zipped_file = tempfile.mkstemp(".zip")
+    with zipfile.ZipFile(zipped_file, "w", compression=zipfile.ZIP_DEFLATED) as f:
+        f.write(keras_file)
+
+    return os.path.getsize(zipped_file)

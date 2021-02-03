@@ -7,6 +7,12 @@ import numpy as np
 import os
 import tempfile
 
+pruning_params = {
+    "pruning_schedule": tfmot.sparsity.keras.ConstantSparsity(
+        0.20, 0, end_step=-1, frequency=1
+    )
+}
+
 
 def add_regularization(model, regularizer=tf.keras.regularizers.l2(0.0001)):
 
@@ -40,18 +46,24 @@ def merged_model(
     num_classes=31,
     lambda_loss=0.75,
     additional_loss=CORAL,
+    prune_val=0.10,
 ):
     source_model = create_model("source_fe", input_shape)
 
-    ip1 = tf.keras.Input(shape=(input_shape))
-    ip2 = tf.keras.Input(shape=(input_shape))
+    # ip1 = tf.keras.Input(shape=(input_shape))
+    # ip2 = tf.keras.Input(shape=(input_shape))
 
     for layer in source_model.layers:
         layer._name = layer.name + str("_1")
 
     if prune:
+        pruning_params = {
+            "pruning_schedule": tfmot.sparsity.keras.ConstantSparsity(
+                prune_val, 0, end_step=-1, frequency=1
+            )
+        }
         target_model = tfmot.sparsity.keras.prune_low_magnitude(
-            create_model("target_fe", input_shape), **cn.pruning_params
+            create_model("target_fe", input_shape), **pruning_params
         )
     else:
         target_model = create_model("target_fe", input_shape)
@@ -59,8 +71,8 @@ def merged_model(
     for layer in target_model.layers:
         layer._name = layer.name + str("_2")
 
-    op1 = source_model(ip1, training=False)
-    op2 = target_model(ip2, training=False)
+    # op1 = source_model(ip1, training=False)
+    # op2 = target_model(ip2, training=False)
 
     # for idx, layer in enumerate(source_model.layers):
     #     if idx < freeze_upto:
@@ -74,13 +86,15 @@ def merged_model(
     #     else:
     #         layer.trainable = True
 
-    x = layers.Dropout(0.4)(op1)
+    x = layers.Dropout(0.4)(source_model.output)
     prediction = tf.keras.layers.Dense(
         31, kernel_initializer=cn.initializer, name="prediction",
     )(x)
-    model = models.Model([ip1, ip2], prediction)
+    model = models.Model([source_model.input, target_model.input], prediction)
     additive_loss = additional_loss(
-        source_output=op1, target_output=op2, percent_lambda=lambda_loss,
+        source_output=source_model.output,
+        target_output=target_model.output,
+        percent_lambda=lambda_loss,
     )
 
     model.add_loss(additive_loss)
@@ -140,110 +154,6 @@ def merged_model(
 
 #     model.add_loss(additive_loss)
 #     model.add_metric(additive_loss, name="domain_loss")
-#     return model
-
-
-# def custom_alexnet(input_shape=(32, 32, 3)):
-#     """
-#     This method creates feature extractor model architecture.
-#     """
-#     model = models.Sequential(
-#         [
-#             layers.Conv2D(
-#                 filters=96,
-#                 kernel_size=(11, 11),
-#                 strides=(4, 4),
-#                 kernel_initializer=cn.initializer,
-#                 input_shape=input_shape,
-#             ),
-#             layers.BatchNormalization(),
-#             layers.Activation("relu"),
-#             layers.MaxPool2D(pool_size=(3, 3), strides=(2, 2)),
-#             layers.Conv2D(
-#                 filters=256,
-#                 kernel_size=(5, 5),
-#                 strides=(1, 1),
-#                 kernel_initializer=cn.initializer,
-#                 padding="valid",
-#             ),
-#             layers.BatchNormalization(),
-#             layers.Activation("relu"),
-#             layers.MaxPool2D(pool_size=(3, 3), strides=(2, 2)),
-#             layers.Conv2D(
-#                 filters=384,
-#                 kernel_size=(3, 3),
-#                 strides=(1, 1),
-#                 kernel_initializer=cn.initializer,
-#                 padding="valid",
-#             ),
-#             layers.BatchNormalization(),
-#             layers.Activation("relu"),
-#             layers.Conv2D(
-#                 filters=384,
-#                 kernel_size=(1, 1),
-#                 strides=(1, 1),
-#                 kernel_initializer=cn.initializer,
-#                 padding="valid",
-#             ),
-#             layers.BatchNormalization(),
-#             layers.Activation("relu"),
-#             layers.Conv2D(
-#                 filters=256,
-#                 kernel_size=(1, 1),
-#                 strides=(1, 1),
-#                 kernel_initializer=cn.initializer,
-#                 padding="valid",
-#             ),
-#             layers.BatchNormalization(),
-#             layers.Activation("relu"),
-#             layers.MaxPooling2D(
-#                 pool_size=(3, 3),
-#                 strides=(2, 2),
-#                 padding="valid",
-#             ),
-#             layers.Dropout(0.3),
-#             layers.Flatten(),
-#         ]
-#     )
-
-#     return model
-
-
-# def custom_Lenet(input_shape=(32, 32, 3)):
-#     """
-#     This method creates feature extractor model architecture.
-#     """
-#     model = models.Sequential(
-#         [
-#             layers.Conv2D(
-#                 filters=64,
-#                 kernel_size=5,
-#                 kernel_initializer=cn.initializer,
-#                 input_shape=input_shape,
-#             ),
-#             layers.BatchNormalization(),
-#             layers.Activation("relu"),
-#             layers.MaxPooling2D(pool_size=2, strides=2),
-#             layers.Conv2D(
-#                 filters=128,
-#                 kernel_size=5,
-#                 kernel_initializer=cn.initializer,
-#             ),
-#             layers.BatchNormalization(),
-#             layers.Activation("relu"),
-#             layers.MaxPooling2D(pool_size=2, strides=2),
-#             layers.Flatten(),
-#             layers.Dense(1024, kernel_initializer=cn.initializer, name="fc3"),
-#             layers.BatchNormalization(),
-#             layers.Activation("relu"),
-#             layers.Dropout(0.3),
-#             layers.Dense(64, kernel_initializer=cn.initializer, name="fc4"),
-#             layers.BatchNormalization(),
-#             layers.Activation("relu"),
-#             layers.Dropout(0.3),
-#         ]
-#     )
-
 #     return model
 
 

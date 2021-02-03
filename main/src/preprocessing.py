@@ -2,7 +2,9 @@ import os
 import tensorflow as tf
 import src.config as cn
 import math
+import pandas as pd
 from src.utils import extract_mnist_m, shuffle_dataset
+import tensorflow_datasets as tfds
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
@@ -46,25 +48,15 @@ def augment_ds(image, label, prob=0.2):
     return image, label
 
 
-def resize_and_rescale(image, new_size, is_greyscale):
-    image = tf.cast(image, tf.float32)
-    if is_greyscale:
-        image = tf.expand_dims(image, axis=-1)
-        image = tf.image.grayscale_to_rgb(image)
-    image = tf.image.resize(image, [new_size, new_size], method="nearest",)
-    image = image / 255.0
-
-    return image
-
-
-def read_images1(file, new_size):
-    image = tf.io.read_file(file)
+def read_from_file(image_file, label, size):
+    image = tf.io.read_file(image_file)
     image = tf.image.decode_jpeg(image, channels=3)
     image = tf.cast(image, tf.float32)
+    image = tf.image.resize(image, [size, size], method="nearest")
     image = tf.keras.applications.xception.preprocess_input(image)
-    image = tf.image.resize(image, [new_size, new_size], method="nearest")
-    image = image / 255.0
-    return image
+    label = tf.cast(label, tf.int64)
+
+    return image, label
 
 
 def read_images(directory, batch_size, new_size):
@@ -217,23 +209,6 @@ def prepare_office_ds(source_directory, target_directory, params):
     return ds_train, ds_test
 
 
-def augment(
-    image_source,
-    image_target,
-    label,
-    new_size,
-    source_is_greyscale,
-    target_is_greyscale,
-):
-
-    image0 = resize_and_rescale(image_source, new_size, source_is_greyscale)
-    image1 = resize_and_rescale(image_target, new_size, target_is_greyscale)
-    image0 = tf.image.random_brightness(image0, max_delta=0.5)
-    image0 = tf.image.random_contrast(image0, lower=0.1, upper=0.5)
-    image0 = tf.image.adjust_saturation(image0, 3)
-    return ((image0, image1), label)
-
-
 def fetch_data(params):
 
     if params["combination"] == 1:
@@ -254,119 +229,61 @@ def fetch_data(params):
 
         return prepare_office_ds(source_directory, target_directory, params)
 
-    elif params["combination"] == 4:
-        source_directory = cn.OFFICE_DS_PATH / "webcam"
-        target_directory = cn.OFFICE_DS_PATH / "dslr"
-
-        return prepare_office_ds(source_directory, target_directory, params)
-
     elif params["combination"] == 5:
         source_directory = cn.OFFICE_DS_PATH / "dslr"
         target_directory = cn.OFFICE_DS_PATH / "amazon"
 
         return prepare_office_ds(source_directory, target_directory, params)
 
-    elif params["combination"] == 6:
-        source_directory = cn.OFFICE_DS_PATH / "dslr"
-        target_directory = cn.OFFICE_DS_PATH / "webcam"
+    elif (params["combination"]) == 6:
+        directory = "/root/Master-Thesis/data/synthetic_data/"
+        data = pd.read_csv(directory + "train_labelling.txt", sep=" ", header=None)
+        file_paths = data[0].values
+        labels = data[1].values
+        ds_source = tf.data.Dataset.from_tensor_slices((file_paths, labels))
 
-        return prepare_office_ds(source_directory, target_directory, params)
-
-    elif (params["combination"]) == 7:
-        (mnistx_train, mnisty_train), (_, _) = tf.keras.datasets.mnist.load_data()
-
-        mnistmx_train, _ = extract_mnist_m(cn.MNIST_M_PATH)
-        mnistmx_train, mnistmy_train = shuffle_dataset(mnistmx_train, mnisty_train)
-        ds_train = tf.data.Dataset.from_tensor_slices(
-            ((mnistx_train, mnistmx_train), mnisty_train)
+        ds_source.map(
+            lambda x, y: read_from_file(x, y, params["resize"]),
+            num_parallel_calls=cn.AUTOTUNE,
         )
 
-        ds_test = tf.data.Dataset.from_tensor_slices(
-            ((mnistmx_train, mnistmx_train), mnistmy_train)
+        # ds_source = ds_source.map(augment_ds, num_parallel_calls=cn.AUTOTUNE).unbatch()
+
+        ds_target, ds_info = tfds.load(
+            "visual_domain_decathlon/gtsrb",
+            split="train+validation+test",
+            shuffle_files=True,
+            as_supervised=True,  # will return tuple (img, label) otherwise dict
+            with_info=True,  # able to get info about dataset
         )
 
-        # Setup for train dataset
-        ds_train = (
-            ds_train.map(
-                lambda x, y: augment(x[0], x[1], y, params["resize"], True, False),
-                num_parallel_calls=cn.AUTOTUNE,
-            )
-            .cache()
-            .shuffle(mnisty_train.shape[0], reshuffle_each_iteration=True)
-            .batch(params["batch_size"])
-            .prefetch(buffer_size=cn.AUTOTUNE)
+        def preprocess_target(image, label):
+            image = tf.cast(image, tf.float32)
+            image = tf.image.resize(image, [299, 299], method="nearest")
+            image = tf.keras.applications.xception.preprocess_input(image)
+            return image, label
+
+        ds_target = ds_target.map(preprocess_target, num_parallel_calls=cn.AUTOTUNE)
+
+        ds_train = tf.data.Dataset.zip((ds_source, ds_target)).map(
+            lambda x, y: ((x[0], y[0]), x[1]), num_parallel_calls=cn.AUTOTUNE
         )
 
-        # Setup for test Dataset
-        ds_test = (
-            ds_test.map(
-                (
-                    lambda x, y: (
-                        (
-                            resize_and_rescale(x[0], params["resize"], False),
-                            resize_and_rescale(x[1], params["resize"], False),
-                        ),
-                        y,
-                    )
-                ),
-                num_parallel_calls=cn.AUTOTUNE,
-            )
-            .batch(params["batch_size"])
-            .prefetch(buffer_size=cn.AUTOTUNE)
+        ds_train = ds_train.batch(params["batch_size"]).prefetch(
+            buffer_size=cn.AUTOTUNE
         )
-        train_count = [x for x in ds_train]
+
         tf.compat.v1.logging.info(
-            "Batch count of training set: " + str(len(train_count))
-        )
-
-        test_count = [x for x in ds_test]
-        tf.compat.v1.logging.info("Batch count of test set: " + str(len(test_count)))
-
-        return ds_train, ds_test
-
-    elif params["combination"] == 8:
-
-        (mnistx_train, mnisty_train), (_, _) = tf.keras.datasets.mnist.load_data()
-
-        mnistmx_train, _ = extract_mnist_m(cn.MNIST_M_PATH)
-        mnistmy_train = mnisty_train
-
-        mnistx_train, mnisty_train = shuffle_dataset(mnistx_train, mnisty_train)
-
-        ds_train = tf.data.Dataset.from_tensor_slices(
-            ((mnistmx_train, mnistx_train), mnistmy_train)
-        )
-
-        ds_test = tf.data.Dataset.from_tensor_slices(
-            ((mnistx_train, mnistx_train), mnisty_train)
-        )
-
-        # Setup for train dataset
-        ds_train = (
-            ds_train.map(
-                (lambda x, y: augment(x[0], x[1], y, params["resize"], False, True)),
-                num_parallel_calls=cn.AUTOTUNE,
+            "Total Target Images: "
+            + str(
+                ds_info.splits["train"].num_examples
+                + ds_info.splits["test"].num_examples
+                + ds_info.splits["validation"].num_examples
             )
-            .cache()
-            .shuffle(mnistmy_train.shape[0], reshuffle_each_iteration=True)
-            .batch(params["batch_size"])
-            .prefetch(buffer_size=cn.AUTOTUNE)
         )
 
-        # Setup for test Dataset
         ds_test = (
-            ds_test.map(
-                (
-                    lambda x, y: (
-                        (
-                            resize_and_rescale(x[0], params["resize"], True),
-                            resize_and_rescale(x[1], params["resize"], True),
-                        ),
-                        y,
-                    )
-                ),
-                num_parallel_calls=cn.AUTOTUNE,
-            )
+            ds_target.map(lambda x, y: ((x, x), y))
             .batch(params["batch_size"])
             .prefetch(buffer_size=cn.AUTOTUNE)
         )
