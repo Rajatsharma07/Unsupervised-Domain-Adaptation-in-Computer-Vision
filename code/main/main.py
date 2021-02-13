@@ -20,11 +20,11 @@ def parse_args():
         "--combination",
         type=int,
         default=6,
-        help="pass experiment combination, see config file",
+        help="pass experiment combination, see config file.",
     )
 
     parser.add_argument(
-        "--architecture", type=int, default="1", help="1 AlexNet, see config file",
+        "--architecture", type=int, default="3", help="1 AlexNet, see config file",
     )
 
     parser.add_argument(
@@ -32,10 +32,10 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--resize", type=int, default=299, help="pass image resizing dimension",
+        "--resize", type=int, default=71, help="pass image resizing dimension",
     )
 
-    parser.add_argument("--batch_size", default=16, help="batch size", type=int)
+    parser.add_argument("--batch_size", default=4, help="batch size", type=int)
 
     parser.add_argument(
         "--learning_rate", default=0.0001, help="Learning rate", type=float
@@ -50,14 +50,14 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--prune", help="Target model will be optimized", default=True, type=bool
+        "--prune", help="Target model will be optimized", default=False, type=bool
     )
 
     parser.add_argument("--epochs", default=5, help="Epochs", type=int)
 
     parser.add_argument(
         "--save_weights",
-        default=False,
+        default=True,
         help="If yes, weights will be saved, otherwise not",
         type=bool,
     )

@@ -48,11 +48,12 @@ def augment_ds(image, label, prob=0.2):
     return image, label
 
 
-def read_from_file(image_file, label, size):
-    image = tf.io.read_file(image_file)
+def read_from_file(image_file, label):
+    directory = "/root/Master-Thesis/code/data/synthetic_data/train/"
+    image = tf.io.read_file(directory + image_file)
     image = tf.image.decode_jpeg(image, channels=3)
     image = tf.cast(image, tf.float32)
-    image = tf.image.resize(image, [size, size], method="nearest")
+    image = tf.image.resize(image, [71, 71], method="nearest")
     image = tf.keras.applications.xception.preprocess_input(image)
     label = tf.cast(label, tf.int64)
 
@@ -236,16 +237,16 @@ def fetch_data(params):
         return prepare_office_ds(source_directory, target_directory, params)
 
     elif (params["combination"]) == 6:
-        directory = "/root/Master-Thesis/data/synthetic_data/"
+        directory = "/root/Master-Thesis/code/data/synthetic_data/"
+
         data = pd.read_csv(directory + "train_labelling.txt", sep=" ", header=None)
-        file_paths = data[0].values
+
+        file_paths = data[0].str[6:]
         labels = data[1].values
+
         ds_source = tf.data.Dataset.from_tensor_slices((file_paths, labels))
 
-        ds_source.map(
-            lambda x, y: read_from_file(x, y, params["resize"]),
-            num_parallel_calls=cn.AUTOTUNE,
-        )
+        ds_source = ds_source.map(read_from_file, num_parallel_calls=cn.AUTOTUNE)
 
         # ds_source = ds_source.map(augment_ds, num_parallel_calls=cn.AUTOTUNE).unbatch()
 
@@ -259,7 +260,7 @@ def fetch_data(params):
 
         def preprocess_target(image, label):
             image = tf.cast(image, tf.float32)
-            image = tf.image.resize(image, [299, 299], method="nearest")
+            image = tf.image.resize(image, [71, 71], method="nearest")
             image = tf.keras.applications.xception.preprocess_input(image)
             return image, label
 

@@ -50,7 +50,7 @@ def train_test(params):
             tf.compat.v1.logging.info("Building the model ...")
 
             model = merged_model(
-                input_shape=(299, 299, 3),
+                input_shape=(71, 71, 3),
                 num_classes=31,
                 lambda_loss=params["lambda_loss"],
                 additional_loss=CORAL,
@@ -73,7 +73,7 @@ def train_test(params):
         model = None
 
         model = merged_model(
-            input_shape=(299, 299, 3),
+            input_shape=(71, 71, 3),
             num_classes=31,
             lambda_loss=params["lambda_loss"],
             additional_loss=CORAL,
