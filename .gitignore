@@ -140,7 +140,6 @@ cython_debug/
 # input data and models
 input/
 .vscode/
-data/
 logs/
 model_data/assets/
 model_data/variables/
