@@ -43,15 +43,12 @@ def add_regularization(model, regularizer=tf.keras.regularizers.l2(0.0001)):
 def merged_model(
     input_shape,
     prune,
+    additional_loss,
     num_classes=31,
     lambda_loss=0.75,
-    additional_loss=CORAL,
     prune_val=0.10,
 ):
     source_model = create_model("source_fe", input_shape)
-
-    # ip1 = tf.keras.Input(shape=(input_shape))
-    # ip2 = tf.keras.Input(shape=(input_shape))
 
     for layer in source_model.layers:
         layer._name = layer.name + str("_1")
@@ -88,9 +85,14 @@ def merged_model(
 
     x = layers.Dropout(0.4)(source_model.output)
     prediction = tf.keras.layers.Dense(
-        31, kernel_initializer=cn.initializer, name="prediction",
+        31,
+        kernel_initializer=cn.initializer,
+        name="prediction",
     )(x)
     model = models.Model([source_model.input, target_model.input], prediction)
+
+    additional_loss = cn.LOSS[additional_loss]
+
     additive_loss = additional_loss(
         source_output=source_model.output,
         target_output=target_model.output,
@@ -100,61 +102,6 @@ def merged_model(
     model.add_loss(additive_loss)
     model.add_metric(additive_loss, name="domain_loss")
     return model
-
-
-# def merged_model(
-#     input_shape,
-#     prune,
-#     weights=cn.MODEL_PATH / "pretrained_weights/bvlc_alexnet.npy",
-#     num_classes=31,
-#     lambda_loss=0.75,
-#     additional_loss=CORAL,
-# ):
-#     source_model = AlexNet(
-#         img_shape=input_shape, num_classes=num_classes, weights=weights
-#     )
-#     source_model._name = "Source"
-#     for layer in source_model.layers:
-#         layer._name = layer.name + str("_1")
-
-#     for layer in source_model.layers[:12]:
-#         layer.trainable = False
-
-#     if prune:
-#         target_model = tfmot.sparsity.keras.prune_low_magnitude(
-#             AlexNet(img_shape=input_shape, num_classes=num_classes, weights=weights),
-#             **cn.pruning_params
-#         )
-#     else:
-#         target_model = AlexNet(
-#             img_shape=input_shape, num_classes=num_classes, weights=weights
-#         )
-#     target_model._name = "Target"
-
-#     for layer in target_model.layers:
-#         layer._name = layer.name + str("_2")
-
-#     for layer in target_model.layers[:12]:
-#         layer.trainable = False
-
-#     prediction = layers.Dense(
-#         num_classes,
-#         kernel_initializer=tf.initializers.RandomNormal(0, 0.005),
-#         name="prediction",
-#     )(source_model.output)
-#     model = models.Model(
-#         [source_model.input, target_model.input], prediction, name="Full_Model"
-#     )
-
-#     additive_loss = additional_loss(
-#         source_output=source_model.output,
-#         target_output=target_model.output,
-#         percent_lambda=lambda_loss,
-#     )
-
-#     model.add_loss(additive_loss)
-#     model.add_metric(additive_loss, name="domain_loss")
-#     return model
 
 
 def AlexNet(

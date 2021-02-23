@@ -8,21 +8,22 @@ import src.config as cn
 from src.models import merged_model
 from src.preprocessing import fetch_data
 import src.utils as utils
-from src.loss import CORAL, kl_divergence, coral_loss
 
 
 def train_test(params):
 
     my_dir = (
-        str(params["combination"])
+        str(cn.DATASET_COMBINATION[params["combination"]])
         + "_"
         + str(params["architecture"])
+        + "_"
+        + str(params["loss_function"])
         + "_"
         + str(params["lambda_loss"])
     )
 
     if params["prune"]:
-        my_dir = my_dir + "_1"
+        my_dir = my_dir + str(params["prune_val"])
 
     assert os.path.exists(cn.LOGS_DIR), "LOGS_DIR doesn't exist"
     experiment_logs_path = os.path.join(cn.LOGS_DIR, my_dir)
@@ -35,7 +36,7 @@ def train_test(params):
     ), "change training mode to 'train_test'"
 
     tf.compat.v1.logging.info(
-        "Fetched the architecture function: " + cn.Architecture[params["architecture"]]
+        "Fetched the architecture function: " + params["architecture"]
     )
 
     if params["use_multiGPU"]:
@@ -50,10 +51,10 @@ def train_test(params):
             tf.compat.v1.logging.info("Building the model ...")
 
             model = merged_model(
-                input_shape=(71, 71, 3),
-                num_classes=31,
+                input_shape=params["input_shape"],
+                num_classes=params["output_classes"],
                 lambda_loss=params["lambda_loss"],
-                additional_loss=CORAL,
+                additional_loss=params["loss_function"],
                 prune=params["prune"],
                 prune_val=params["prune_val"],
             )
@@ -73,10 +74,10 @@ def train_test(params):
         model = None
 
         model = merged_model(
-            input_shape=(71, 71, 3),
-            num_classes=31,
+            input_shape=params["input_shape"],
+            num_classes=params["output_classes"],
             lambda_loss=params["lambda_loss"],
-            additional_loss=CORAL,
+            additional_loss=params["loss_function"],
             prune=params["prune"],
             prune_val=params["prune_val"],
         )
@@ -112,7 +113,9 @@ def train_test(params):
     """ Plotting """
     tf.compat.v1.logging.info("Creating accuracy & loss plots...")
     utils.loss_accuracy_plots(
-        hist=hist, log_dir=log_dir, params=params,
+        hist=hist,
+        log_dir=log_dir,
+        params=params,
     )
 
     """ Model Saving """
@@ -124,7 +127,6 @@ def train_test(params):
         Path(model_path).mkdir(parents=True, exist_ok=True)
         model.save(os.path.join(model_path, "model"))
         tf.compat.v1.logging.info(f"Model successfully saved at: {model_path}")
-        tf.compat.v1.logging.info(f"Pruned Model summary: {model.summary()}")
 
     # """ Pruned Model Saving """
     # if params["prune"]:

@@ -145,7 +145,8 @@ def prepare_office_ds(source_directory, target_directory, params):
     #     .shuffle(len(source_images_list), reshuffle_each_iteration=True)
     # )
 
-    source_ds = source_ds.map(augment_ds, num_parallel_calls=cn.AUTOTUNE)
+    if params["augment"]:
+        source_ds = source_ds.map(augment_ds, num_parallel_calls=cn.AUTOTUNE)
 
     # target_ds_original = tf.data.Dataset.from_tensor_slices(
     #     (target_images_list, target_labels_list)
@@ -212,32 +213,32 @@ def prepare_office_ds(source_directory, target_directory, params):
 
 def fetch_data(params):
 
-    if params["combination"] == 1:
+    if cn.DATASET_COMBINATION[params["combination"]] == 1:
         source_directory = cn.OFFICE_DS_PATH / "amazon"
         target_directory = cn.OFFICE_DS_PATH / "webcam"
 
         return prepare_office_ds(source_directory, target_directory, params)
 
-    elif params["combination"] == 2:
+    elif cn.DATASET_COMBINATION[params["combination"]] == 2:
         source_directory = cn.OFFICE_DS_PATH / "amazon"
         target_directory = cn.OFFICE_DS_PATH / "dslr"
 
         return prepare_office_ds(source_directory, target_directory, params)
 
-    elif params["combination"] == 3:
+    elif cn.DATASET_COMBINATION[params["combination"]] == 3:
         source_directory = cn.OFFICE_DS_PATH / "webcam"
         target_directory = cn.OFFICE_DS_PATH / "amazon"
 
         return prepare_office_ds(source_directory, target_directory, params)
 
-    elif params["combination"] == 5:
+    elif cn.DATASET_COMBINATION[params["combination"]] == 4:
         source_directory = cn.OFFICE_DS_PATH / "dslr"
         target_directory = cn.OFFICE_DS_PATH / "amazon"
 
         return prepare_office_ds(source_directory, target_directory, params)
 
-    elif (params["combination"]) == 6:
-        directory = "/root/Master-Thesis/code/data/synthetic_data/"
+    elif cn.DATASET_COMBINATION[params["combination"]] == 5:
+        directory = cn.SYNTHETIC_PATH
 
         data = pd.read_csv(directory + "train_labelling.txt", sep=" ", header=None)
 
@@ -248,7 +249,8 @@ def fetch_data(params):
 
         ds_source = ds_source.map(read_from_file, num_parallel_calls=cn.AUTOTUNE)
 
-        # ds_source = ds_source.map(augment_ds, num_parallel_calls=cn.AUTOTUNE).unbatch()
+        # if params["augment"]:
+        #     ds_source = ds_source.map(augment_ds, num_parallel_calls=cn.AUTOTUNE).unbatch()
 
         ds_target, ds_info = tfds.load(
             "visual_domain_decathlon/gtsrb",

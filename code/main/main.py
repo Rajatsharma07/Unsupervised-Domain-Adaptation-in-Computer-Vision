@@ -18,24 +18,47 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Arguments for the experiment")
     parser.add_argument(
         "--combination",
-        type=int,
-        default=6,
+        type=str,
+        default="Amazon_to_Webcam",
         help="pass experiment combination, see config file.",
     )
 
     parser.add_argument(
-        "--architecture", type=int, default="3", help="1 AlexNet, see config file",
+        "--architecture",
+        type=str,
+        default="Xception",
+        help="AlexNet/Vgg16/Xception, see config file",
     )
 
     parser.add_argument(
-        "--prune_val", type=float, default=0.10, help="1 AlexNet, see config file",
+        "--prune_val",
+        type=float,
+        default=0.10,
+        help="1 AlexNet, see config file",
     )
 
     parser.add_argument(
-        "--resize", type=int, default=71, help="pass image resizing dimension",
+        "--resize",
+        type=int,
+        default=299,
+        help="pass image resizing dimension",
     )
 
-    parser.add_argument("--batch_size", default=4, help="batch size", type=int)
+    parser.add_argument(
+        "--input_shape",
+        type=tuple,
+        default=(299, 299, 3),
+        help="model input shape",
+    )
+
+    parser.add_argument(
+        "--output_classes",
+        type=int,
+        default=31,
+        help="classes in the dataset",
+    )
+
+    parser.add_argument("--batch_size", default=8, help="batch size", type=int)
 
     parser.add_argument(
         "--learning_rate", default=0.0001, help="Learning rate", type=float
@@ -46,7 +69,21 @@ def parse_args():
     )
 
     parser.add_argument(
+        "--loss_function",
+        help="CORAL/Another",
+        default="CORAL",
+        type=str,
+    )
+
+    parser.add_argument(
         "--lambda_loss", help="Additional loss lambda value", default=0.75, type=float
+    )
+
+    parser.add_argument(
+        "--augment",
+        help="Augmentation will be applied or not",
+        default=False,
+        type=bool,
     )
 
     parser.add_argument(
