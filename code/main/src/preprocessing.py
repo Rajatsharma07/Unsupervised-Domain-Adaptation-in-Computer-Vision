@@ -18,15 +18,15 @@ def augment_ds(image, label, prob=0.2):
         lambda: image,
     )
 
-    # # Adding Gaussian Noise
-    # noise = tf.random.normal(
-    #     shape=tf.shape(image), mean=0.0, stddev=1, dtype=tf.float32
-    # )
-    # image = tf.cond(
-    #     tf.random.uniform(shape=[], minval=0, maxval=1) < prob,
-    #     lambda: tf.add(image, noise),
-    #     lambda: image,
-    # )
+    # Adding Gaussian Noise
+    noise = tf.random.normal(
+        shape=tf.shape(image), mean=0.0, stddev=1, dtype=tf.float32
+    )
+    image = tf.cond(
+        tf.random.uniform(shape=[], minval=0, maxval=1) < prob,
+        lambda: tf.add(image, noise),
+        lambda: image,
+    )
 
     # Colour Augmentations
     image = tf.image.random_hue(image, 0.05)
@@ -34,16 +34,15 @@ def augment_ds(image, label, prob=0.2):
     image = tf.image.random_brightness(image, max_delta=0.4)
     image = tf.image.random_contrast(image, lower=0.3, upper=1.2)
 
-    # # Rotating Images
-    # image = tf.cond(
-    #     tf.random.uniform(shape=[], minval=0, maxval=1) < prob,
-    #     lambda: tf.image.rot90(image, k=1),
-    #     lambda: tf.image.rot90(image, k=3),
-    # )
+    # Rotating Images
+    image = tf.cond(
+        tf.random.uniform(shape=[], minval=0, maxval=1) < prob,
+        lambda: tf.image.rot90(image, k=1),
+        lambda: image,
+    )
 
     # Flipping Images
     image = tf.image.random_flip_left_right(image)
-    # image = tf.image.random_flip_up_down(image)
 
     return image, label
 
@@ -188,7 +187,7 @@ def prepare_office_ds(source_directory, target_directory, params):
     ds_train = ds_train.prefetch(buffer_size=cn.AUTOTUNE)
 
     # x1, y1 = [], []
-    # for x, y in target_ds_original:
+    # for x, y in target_ds_original.unbatch():
     #     x1.append(x)
     #     y1.append(y)
 

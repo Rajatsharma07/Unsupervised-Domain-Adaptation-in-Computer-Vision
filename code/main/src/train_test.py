@@ -23,7 +23,8 @@ def train_test(params):
     )
 
     if params["prune"]:
-        my_dir = my_dir + str(params["prune_val"])
+        tf.compat.v1.logging.info("Pruning is activated")
+        my_dir = my_dir + "_" + str(params["prune_val"])
 
     assert os.path.exists(cn.LOGS_DIR), "LOGS_DIR doesn't exist"
     experiment_logs_path = os.path.join(cn.LOGS_DIR, my_dir)

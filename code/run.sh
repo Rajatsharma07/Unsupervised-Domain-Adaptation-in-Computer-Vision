@@ -1,11 +1,12 @@
 #! /usr/bin/env bash
+## 1st
 
-python3 main/main.py --lambda_loss=0.50 --batch_size=8 --architecture=3 --combination=1 --resize=299 --prune=True --prune_val=0.10 --epochs=40
-python3 main/main.py --lambda_loss=0.50 --batch_size=8 --architecture=3 --combination=1 --resize=299 --prune=True --prune_val=0.20 --epochs=40
-python3 main/main.py --lambda_loss=0.50 --batch_size=8 --architecture=3 --combination=1 --resize=299 --prune=True --prune_val=0.30 --epochs=40
-python3 main/main.py --lambda_loss=0.50 --batch_size=8 --architecture=3 --combination=1 --resize=299 --prune=True --prune_val=0.40 --epochs=40
-python3 main/main.py --lambda_loss=0.50 --batch_size=8 --architecture=3 --combination=1 --resize=299 --prune=True --prune_val=0.50 --epochs=40
-python3 main/main.py --lambda_loss=0.50 --batch_size=8 --architecture=3 --combination=1 --resize=299 --prune=True --prune_val=0.60 --epochs=40
-python3 main/main.py --lambda_loss=0.50 --batch_size=8 --architecture=3 --combination=1 --resize=299 --prune=True --prune_val=0.70 --epochs=40
-python3 main/main.py --lambda_loss=0.50 --batch_size=8 --architecture=3 --combination=1 --resize=299 --prune=True --prune_val=0.80 --epochs=40
-python3 main/main.py --lambda_loss=0.50 --batch_size=8 --architecture=3 --combination=1 --resize=299 --prune=True --prune_val=0.90 --epochs=40
+python3 main/main.py --prune_val=0.20 --lambda_loss=0.50 --batch_size=8 --architecture="Xception" --resize=299  --epochs=40 --combination="Amazon_to_Webcam"
+python3 main/main.py --prune_val=0.30 --lambda_loss=0.50 --batch_size=8 --architecture="Xception" --resize=299  --epochs=40 --combination="Amazon_to_Webcam"
+python3 main/main.py --prune_val=0.40 --lambda_loss=0.50 --batch_size=8 --architecture="Xception" --resize=299  --epochs=40 --combination="Amazon_to_Webcam"
+python3 main/main.py --prune_val=0.50 --lambda_loss=0.50 --batch_size=8 --architecture="Xception" --resize=299  --epochs=40 --combination="Amazon_to_Webcam"
+python3 main/main.py --prune_val=0.60 --lambda_loss=0.50 --batch_size=8 --architecture="Xception" --resize=299  --epochs=40 --combination="Amazon_to_Webcam"
+python3 main/main.py --prune_val=0.70 --lambda_loss=0.50 --batch_size=8 --architecture="Xception" --resize=299  --epochs=40 --combination="Amazon_to_Webcam"
+python3 main/main.py --prune_val=0.80 --lambda_loss=0.50 --batch_size=8 --architecture="Xception" --resize=299  --epochs=40 --combination="Amazon_to_Webcam"
+python3 main/main.py --prune_val=0.90 --lambda_loss=0.50 --batch_size=8 --architecture="Xception" --resize=299  --epochs=40 --combination="Amazon_to_Webcam"
+python3 main/main.py --prune_val=1 --lambda_loss=0.50 --batch_size=8 --architecture="Xception" --resize=299  --epochs=40 --combination="Amazon_to_Webcam"

@@ -1,7 +1,7 @@
 import tensorflow as tf
 from tensorflow.keras import models, layers
 import src.config as cn
-from src.loss import CORAL, coral_loss
+from src.loss import CORAL, coral_loss, kl_divergence
 import tensorflow_model_optimization as tfmot
 import numpy as np
 import os
@@ -48,6 +48,9 @@ def merged_model(
     lambda_loss=0.75,
     prune_val=0.10,
 ):
+    # ip1 = tf.keras.Input(shape=input_shape)
+    # ip2 = tf.keras.Input(shape=input_shape)
+
     source_model = create_model("source_fe", input_shape)
 
     for layer in source_model.layers:
@@ -68,7 +71,7 @@ def merged_model(
     for layer in target_model.layers:
         layer._name = layer.name + str("_2")
 
-    # op1 = source_model(ip1, training=False)
+    # op1 = source_model(source_model.input, training=False)
     # op2 = target_model(ip2, training=False)
 
     # for idx, layer in enumerate(source_model.layers):
@@ -84,23 +87,28 @@ def merged_model(
     #         layer.trainable = True
 
     x = layers.Dropout(0.4)(source_model.output)
+    # x = layers.Dropout(0.4)(op1)
     prediction = tf.keras.layers.Dense(
-        31,
+        num_classes,
         kernel_initializer=cn.initializer,
         name="prediction",
     )(x)
     model = models.Model([source_model.input, target_model.input], prediction)
+    # model = models.Model([ip1, ip2], prediction)
 
     additional_loss = cn.LOSS[additional_loss]
 
     additive_loss = additional_loss(
         source_output=source_model.output,
         target_output=target_model.output,
+        # source_output=op1,
+        # target_output=op2,
         percent_lambda=lambda_loss,
     )
 
     model.add_loss(additive_loss)
-    model.add_metric(additive_loss, name="domain_loss")
+    model.add_metric(additive_loss, name="CORAL_loss")
+
     return model
 
 
