@@ -19,7 +19,7 @@ def parse_args():
     parser.add_argument(
         "--combination",
         type=str,
-        default="Amazon_to_Webcam",
+        default="SynSigns_to_GTSRB",
         help="pass experiment combination, see config file.",
     )
 
@@ -40,21 +40,21 @@ def parse_args():
     parser.add_argument(
         "--resize",
         type=int,
-        default=299,
+        default=71,
         help="pass image resizing dimension",
     )
 
     parser.add_argument(
         "--input_shape",
         type=tuple,
-        default=(299, 299, 3),
+        default=(71, 71, 3),
         help="model input shape",
     )
 
     parser.add_argument(
         "--output_classes",
         type=int,
-        default=31,
+        default=43,
         help="classes in the dataset",
     )
 
@@ -87,10 +87,10 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--prune", help="Target model will be optimized", default=True, type=bool
+        "--prune", help="Target model will be optimized", default=False, type=bool
     )
 
-    parser.add_argument("--epochs", default=1, help="Epochs", type=int)
+    parser.add_argument("--epochs", default=5, help="Epochs", type=int)
 
     parser.add_argument(
         "--save_weights",

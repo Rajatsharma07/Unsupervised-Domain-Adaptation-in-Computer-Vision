@@ -5,6 +5,7 @@ import math
 import pandas as pd
 from src.utils import extract_mnist_m, shuffle_dataset
 import tensorflow_datasets as tfds
+from pathlib import Path
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
@@ -54,7 +55,7 @@ def read_from_file(image_file, label):
     image = tf.cast(image, tf.float32)
     image = tf.image.resize(image, [71, 71], method="nearest")
     image = tf.keras.applications.xception.preprocess_input(image)
-    label = tf.cast(label, tf.int64)
+    label = tf.cast(label, tf.float32)
 
     return image, label
 
@@ -74,6 +75,7 @@ def read_images(directory, batch_size, new_size):
 def preprocess(image, label):
     # Cast to float32
     image = tf.cast(image, tf.float32)
+    label = tf.cast(label, tf.float32)
     image = tf.keras.applications.xception.preprocess_input(image)
     # image = image / 255.0
 
@@ -81,9 +83,6 @@ def preprocess(image, label):
 
 
 def prepare_office_ds(source_directory, target_directory, params):
-
-    # source_images_list, source_labels_list = create_paths(source_directory)
-    # target_images_list, target_labels_list = create_paths(target_directory)
 
     source_ds_original = read_images(
         source_directory, params["batch_size"], params["resize"]
@@ -237,57 +236,50 @@ def fetch_data(params):
         return prepare_office_ds(source_directory, target_directory, params)
 
     elif cn.DATASET_COMBINATION[params["combination"]] == 5:
-        directory = cn.SYNTHETIC_PATH
 
-        data = pd.read_csv(directory + "train_labelling.txt", sep=" ", header=None)
+        synthetic_directory = cn.SYNTHETIC_PATH
 
-        file_paths = data[0].str[6:]
-        labels = data[1].values
+        labels_data = pd.read_csv(
+            synthetic_directory / "train_labelling.txt", sep=" ", header=None
+        )
+
+        file_paths = labels_data[0].str[6:]
+        labels = labels_data[1].values
 
         ds_source = tf.data.Dataset.from_tensor_slices((file_paths, labels))
 
-        ds_source = ds_source.map(read_from_file, num_parallel_calls=cn.AUTOTUNE)
-
-        # if params["augment"]:
-        #     ds_source = ds_source.map(augment_ds, num_parallel_calls=cn.AUTOTUNE).unbatch()
-
-        ds_target, ds_info = tfds.load(
-            "visual_domain_decathlon/gtsrb",
-            split="train+validation+test",
-            shuffle_files=True,
-            as_supervised=True,  # will return tuple (img, label) otherwise dict
-            with_info=True,  # able to get info about dataset
+        ds_source = ds_source.map(read_from_file, num_parallel_calls=cn.AUTOTUNE).batch(
+            params["batch_size"]
         )
 
-        def preprocess_target(image, label):
-            image = tf.cast(image, tf.float32)
-            image = tf.image.resize(image, [71, 71], method="nearest")
-            image = tf.keras.applications.xception.preprocess_input(image)
-            return image, label
+        GTSRB_directory = cn.GTSRB_PATH
+        target_ds_original = read_images(
+            GTSRB_directory / Path("train"), params["batch_size"], params["resize"]
+        )
 
-        ds_target = ds_target.map(preprocess_target, num_parallel_calls=cn.AUTOTUNE)
+        target_ds_original = target_ds_original.map(
+            preprocess, num_parallel_calls=tf.data.experimental.AUTOTUNE
+        )
+
+        length_source_images = ds_source.cardinality().numpy()
+        tf.compat.v1.logging.info(f"length_source_images: {length_source_images}")
+        length_target_images = target_ds_original.cardinality().numpy()
+        tf.compat.v1.logging.info(f"length_target_images: {length_target_images}")
+
+        ds_target = target_ds_original.repeat(
+            math.ceil(length_source_images / length_target_images)
+        )
+
+        if params["augment"]:
+            ds_source = ds_source.map(augment_ds, num_parallel_calls=cn.AUTOTUNE)
 
         ds_train = tf.data.Dataset.zip((ds_source, ds_target)).map(
             lambda x, y: ((x[0], y[0]), x[1]), num_parallel_calls=cn.AUTOTUNE
         )
+        ds_train = ds_train.prefetch(buffer_size=cn.AUTOTUNE)
 
-        ds_train = ds_train.batch(params["batch_size"]).prefetch(
+        ds_test = target_ds_original.map(lambda x, y: ((x, x), y)).prefetch(
             buffer_size=cn.AUTOTUNE
-        )
-
-        tf.compat.v1.logging.info(
-            "Total Target Images: "
-            + str(
-                ds_info.splits["train"].num_examples
-                + ds_info.splits["test"].num_examples
-                + ds_info.splits["validation"].num_examples
-            )
-        )
-
-        ds_test = (
-            ds_target.map(lambda x, y: ((x, x), y))
-            .batch(params["batch_size"])
-            .prefetch(buffer_size=cn.AUTOTUNE)
         )
 
         train_count = [x for x in ds_train]
