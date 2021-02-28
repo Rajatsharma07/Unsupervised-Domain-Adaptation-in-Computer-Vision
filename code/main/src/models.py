@@ -7,38 +7,6 @@ import numpy as np
 import os
 import tempfile
 
-pruning_params = {
-    "pruning_schedule": tfmot.sparsity.keras.ConstantSparsity(
-        0.20, 0, end_step=-1, frequency=1
-    )
-}
-
-
-def add_regularization(model, regularizer=tf.keras.regularizers.l2(0.0001)):
-
-    if not isinstance(regularizer, tf.keras.regularizers.Regularizer):
-        print("Regularizer must be a subclass of tf.keras.regularizers.Regularizer")
-        return model
-
-    for layer in model.layers:
-        for attr in ["kernel_regularizer"]:
-            if hasattr(layer, attr):
-                setattr(layer, attr, regularizer)
-
-    # When we change the layers attributes, the change only happens in the model config file
-    model_json = model.to_json()
-
-    # Save the weights before reloading the model.
-    tmp_weights_path = os.path.join(tempfile.gettempdir(), "tmp_weights.h5")
-    model.save_weights(tmp_weights_path)
-
-    # load the model from the config
-    model = tf.keras.models.model_from_json(model_json)
-
-    # Reload the model weights
-    model.load_weights(tmp_weights_path, by_name=True)
-    return model
-
 
 def merged_model(
     input_shape,
@@ -48,9 +16,6 @@ def merged_model(
     lambda_loss=0.75,
     prune_val=0.10,
 ):
-    # ip1 = tf.keras.Input(shape=input_shape)
-    # ip2 = tf.keras.Input(shape=input_shape)
-
     source_model = create_model("source_fe", input_shape)
 
     for layer in source_model.layers:
@@ -71,38 +36,18 @@ def merged_model(
     for layer in target_model.layers:
         layer._name = layer.name + str("_2")
 
-    # op1 = source_model(source_model.input, training=False)
-    # op2 = target_model(ip2, training=False)
-
-    # for idx, layer in enumerate(source_model.layers):
-    #     if idx < freeze_upto:
-    #         layer.trainable = False
-    #     else:
-    #         layer.trainable = True
-
-    # for idx, layer in enumerate(target_model.layers):
-    #     if idx < freeze_upto:
-    #         layer.trainable = False
-    #     else:
-    #         layer.trainable = True
-
     x = layers.Dropout(0.4)(source_model.output)
-    # x = layers.Dropout(0.4)(op1)
     prediction = tf.keras.layers.Dense(
         num_classes,
         kernel_initializer=cn.initializer,
         name="prediction",
     )(x)
     model = models.Model([source_model.input, target_model.input], prediction)
-    # model = models.Model([ip1, ip2], prediction)
-
     additional_loss = cn.LOSS[additional_loss]
 
     additive_loss = additional_loss(
         source_output=source_model.output,
         target_output=target_model.output,
-        # source_output=op1,
-        # target_output=op2,
         percent_lambda=lambda_loss,
     )
 
@@ -115,16 +60,6 @@ def merged_model(
 def AlexNet(
     img_shape=(227, 227, 3), num_classes=31, weights="/content/bvlc_alexnet.npy"
 ):
-    """[summary]
-
-    Args:
-        img_shape (tuple, optional): [description]. Defaults to (227, 227, 3).
-        num_classes (int, optional): [description]. Defaults to 1000.
-        weights (str, optional): [description]. Defaults to "/content/bvlc_alexnet.npy".
-
-    Returns:
-        [type]: [description]
-    """
     inputs = tf.keras.Input(img_shape)
     conv1 = conv2d_bn(
         x=inputs,
