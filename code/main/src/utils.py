@@ -31,7 +31,9 @@ def define_logger(log_file):
 
 
 def loss_accuracy_plots(
-    hist, log_dir, params,
+    hist,
+    log_dir,
+    params,
 ):
     accuracy = hist.history["accuracy"]
     val_accuracy = hist.history["val_accuracy"]
@@ -115,20 +117,27 @@ def callbacks_fn(params, my_dir):
     """CSV Logger Callback """
     Path(log_dir).mkdir(parents=True, exist_ok=True)
     csv = os.path.join(log_dir, "training_logs.csv")
-    csv_logger = CSVLogger(csv, append=True, separator=";",)
+    csv_logger = CSVLogger(
+        csv,
+        append=True,
+        separator=";",
+    )
     # print(f"\nModel CSV logs path: {csv}\n")
     tf.compat.v1.logging.info(f"Model CSV logs path: {csv}")
     callback_list.append(csv_logger)
 
     """Reduce LR Callback """
     reduce_lr_callback = tf.keras.callbacks.ReduceLROnPlateau(
-        monitor="val_accuracy", factor=0.4, patience=2, min_lr=0.0000001
+        monitor="val_accuracy", factor=0.4, patience=4, min_lr=0.0000001
     )
     callback_list.append(reduce_lr_callback)
 
     """Early Stopping Callback """
     early_stopping_callback = tf.keras.callbacks.EarlyStopping(
-        monitor="val_accuracy", patience=7, verbose=1, mode="auto",
+        monitor="val_accuracy",
+        patience=15,
+        verbose=1,
+        mode="auto",
     )
     callback_list.append(early_stopping_callback)
 
@@ -141,7 +150,8 @@ def callbacks_fn(params, my_dir):
         Path(checkpoint_path).mkdir(parents=True, exist_ok=True)
         assert os.path.exists(checkpoint_path), "checkpoint_path doesn't exist"
         checkpoint_path = os.path.join(
-            checkpoint_path, "weights.{epoch:02d}-{val_accuracy:.2f}.hdf5",
+            checkpoint_path,
+            "weights.{epoch:02d}-{val_accuracy:.2f}.hdf5",
         )
         cp_callback = tf.keras.callbacks.ModelCheckpoint(
             filepath=checkpoint_path,
