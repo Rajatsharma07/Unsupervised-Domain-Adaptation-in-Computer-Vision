@@ -87,11 +87,17 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--technique", help="Orginal if False, Ours if True", default=False, type=bool
+        "--technique",
+        help="Base technique - if False, Ours - if True",
+        default=False,
+        type=bool,
     )
 
     parser.add_argument(
-        "--prune", help="Target model will be optimized", default=True, type=bool
+        "--prune",
+        help="Model will be optimized in Original technique, otherwise Target model in our technique",
+        default=False,
+        type=bool,
     )
 
     parser.add_argument("--epochs", default=2, help="Epochs", type=int)

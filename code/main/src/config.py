@@ -20,5 +20,5 @@ DATASET_COMBINATION = {
     "SynSigns_to_GTSRB": 5,
 }
 
-ARCHITECTURE = {"Other": 1, "Xception": 3}
+ARCHITECTURE = {"Xception": 1, "Other": 2}
 LOSS = {"CORAL": CORAL, "Another": coral_loss}

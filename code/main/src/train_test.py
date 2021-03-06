@@ -61,6 +61,7 @@ def train_test(params):
                 additional_loss=params["loss_function"],
                 prune=params["prune"],
                 prune_val=params["prune_val"],
+                technique=params["technique"],
             )
 
             # print(model.summary())
@@ -123,6 +124,12 @@ def train_test(params):
         params=params,
     )
 
+    """ Evaluate on Target Dataset"""
+    results = model.evaluate(ds_test)
+    tf.compat.v1.logging.info(
+        f"Test Set evaluation results for run {Path(log_dir).name} : Accuracy: {results[1]}, Loss: {results[0]}"
+    )
+
     """ Model Saving """
     if params["save_model"]:
         tf.compat.v1.logging.info("Saving the model...")
@@ -133,33 +140,27 @@ def train_test(params):
         model.save(os.path.join(model_path, "model"))
         tf.compat.v1.logging.info(f"Model successfully saved at: {model_path}")
 
-    # """ Pruned Model Saving """
-    # if params["prune"]:
-    #     model_for_export = tfmot.sparsity.keras.strip_pruning(model)
-    #     tf.compat.v1.logging.info(f"Pruned Model summary: {model_for_export.summary()}")
+    """ Pruned Model Saving """
+    if params["prune"]:
+        model_for_export = tfmot.sparsity.keras.strip_pruning(model)
+        tf.compat.v1.logging.info(f"Pruned Model summary: {model_for_export.summary()}")
 
-    #     tf.compat.v1.logging.info("Saving Pruned Model...")
-    #     model_path = os.path.join(
-    #         cn.MODEL_PATH, (Path(log_dir).parent).name, Path(log_dir).name
-    #     )
-    #     Path(model_path).mkdir(parents=True, exist_ok=True)
-    #     model_for_export.save(os.path.join(model_path, "pruned_model"))
-    #     tf.compat.v1.logging.info(f"Pruned Model successfully saved at: {model_path}")
+        tf.compat.v1.logging.info("Saving Pruned Model...")
+        model_path = os.path.join(
+            cn.MODEL_PATH, (Path(log_dir).parent).name, Path(log_dir).name
+        )
+        Path(model_path).mkdir(parents=True, exist_ok=True)
+        model_for_export.save(os.path.join(model_path, "pruned_model"))
+        tf.compat.v1.logging.info(f"Pruned Model successfully saved at: {model_path}")
 
-    #     tf.compat.v1.logging.info(
-    #         "Size of gzipped pruned model without stripping: %.2f bytes"
-    #         % (utils.get_gzipped_model_size(model))
-    #     )
+        tf.compat.v1.logging.info(
+            "Size of gzipped pruned model without stripping: %.2f bytes"
+            % (utils.get_gzipped_model_size(model))
+        )
 
-    #     tf.compat.v1.logging.info(
-    #         "Size of gzipped pruned model with stripping: %.2f bytes"
-    #         % (utils.get_gzipped_model_size(model_for_export))
-    #     )
-
-    """ Evaluate on Target Dataset"""
-    results = model.evaluate(ds_test)
-    tf.compat.v1.logging.info(
-        f"Test Set evaluation results for run {Path(log_dir).name} : Accuracy: {results[1]}, Loss: {results[0]}"
-    )
+        tf.compat.v1.logging.info(
+            "Size of gzipped pruned model with stripping: %.2f bytes"
+            % (utils.get_gzipped_model_size(model_for_export))
+        )
 
     return model, hist, results
