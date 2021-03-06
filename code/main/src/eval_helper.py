@@ -13,7 +13,7 @@ def test_accuracy(
     test_set=None,
     test_labels=None,
     batch=None,
-    verbose=2,
+    verbose=1,
     tf_dataset=None,
     is_tfdataset=False,
 ):
@@ -24,7 +24,7 @@ def test_accuracy(
         test_set ([type], optional): [test dataset]. Defaults to None.
         test_labels ([type], optional): [test labels]. Defaults to None.
         batch ([type], optional): [description]. Defaults to None.
-        verbose (int, optional): [verbose access]. Defaults to 2.
+        verbose (int, optional): [verbose access]. Defaults to 1.
         tf_dataset ([type], optional): [TFDS dataset]. Defaults to None.
         is_tfdataset (bool, optional): [Yes if TF data pipeline is used]. Defaults to False.
     """
@@ -39,11 +39,11 @@ def test_accuracy(
 
 def evaluation_plots(
     model,
-    test_set,
     test_labels,
     log_dir,
     class_names_list,
     params,
+    test_set=None,
     batch=None,
     tf_dataset=None,
     is_tfdataset=False,
@@ -52,7 +52,7 @@ def evaluation_plots(
 
     Args:
         model ([keras.Model]): [description]
-        test_set ([type]): [test_set]
+        test_set ([type]): [test_set]. Defaults to None.
         test_labels ([type]): [test_labels]
         log_dir ([str]): [log direcory]
         class_names_list ([type]): [class labels]

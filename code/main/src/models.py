@@ -8,46 +8,92 @@ import os
 import tempfile
 
 
-def merged_model(
+def get_model(
     input_shape,
     prune,
     additional_loss,
+    technique,
     num_classes=31,
     lambda_loss=0.75,
     prune_val=0.10,
 ):
-    source_model = create_model("source_fe", input_shape)
 
-    for layer in source_model.layers:
-        layer._name = layer.name + str("_1")
+    inputs = [
+        tf.keras.layers.Input(shape=(input_shape)),
+        tf.keras.layers.Input(shape=(input_shape)),
+    ]
 
-    if prune:
-        pruning_params = {
-            "pruning_schedule": tfmot.sparsity.keras.ConstantSparsity(
-                prune_val, 0, end_step=-1, frequency=1
-            )
-        }
-        target_model = tfmot.sparsity.keras.prune_low_magnitude(
-            create_model("target_fe", input_shape), **pruning_params
+    if not technique:
+        # Original Technique
+        model = tf.keras.applications.Xception(
+            include_top=False,
+            weights="imagenet",
+            pooling="avg",
+            input_shape=input_shape,
         )
+        if prune:
+            # Prune Target Model
+            pruning_params = {
+                "pruning_schedule": tfmot.sparsity.keras.ConstantSparsity(
+                    prune_val, 0, end_step=-1, frequency=1
+                )
+            }
+            model = tfmot.sparsity.keras.prune_low_magnitude(model, **pruning_params)
+
+        source_op = model(inputs[0], training=False)
+        target_op = model(inputs[1], training=False)
+
     else:
-        target_model = create_model("target_fe", input_shape)
+        # Our Technique
+        source_model = tf.keras.applications.Xception(
+            include_top=False,
+            weights="imagenet",
+            pooling="avg",
+            input_shape=input_shape,
+        )
+        target_model = tf.keras.applications.Xception(
+            include_top=False,
+            weights="imagenet",
+            pooling="avg",
+            input_shape=input_shape,
+        )
 
-    for layer in target_model.layers:
-        layer._name = layer.name + str("_2")
+        if prune:
+            # Prune Target Model
+            pruning_params = {
+                "pruning_schedule": tfmot.sparsity.keras.ConstantSparsity(
+                    prune_val, 0, end_step=-1, frequency=1
+                )
+            }
+            target_model = tfmot.sparsity.keras.prune_low_magnitude(
+                target_model, **pruning_params
+            )
 
-    x = layers.Dropout(0.4)(source_model.output)
-    prediction = tf.keras.layers.Dense(
+        # Renaming Layers
+        for layer in source_model.layers:
+            layer._name = layer.name + str("_1")
+
+        for layer in target_model.layers:
+            layer._name = layer.name + str("_2")
+
+        source_op = source_model(inputs[0], training=False)
+        target_op = target_model(inputs[1], training=False)
+
+    # Top Layer
+    classifier = layers.Dropout(0.3)(source_op)
+    classifier = tf.keras.layers.Dense(
         num_classes,
         kernel_initializer=cn.initializer,
         name="prediction",
-    )(x)
-    model = models.Model([source_model.input, target_model.input], prediction)
+    )(classifier)
+    model = models.Model(inputs, classifier)
+
+    # CORAL LOSS addition to the network
     additional_loss = cn.LOSS[additional_loss]
 
     additive_loss = additional_loss(
-        source_output=source_model.output,
-        target_output=target_model.output,
+        source_output=source_op,
+        target_output=target_op,
         percent_lambda=lambda_loss,
     )
 
@@ -211,13 +257,3 @@ def conv2d_bn(
         )(x_b)
         x = layers.concatenate([x_a, x_b])
     return x
-
-
-def create_model(name, input_shape=(299, 299, 3)):
-    base_model = tf.keras.applications.Xception(
-        include_top=False, weights="imagenet", input_shape=input_shape, pooling="avg"
-    )
-    model = tf.keras.models.Model(
-        inputs=base_model.inputs, outputs=base_model.outputs, name=name
-    )
-    return model

@@ -5,7 +5,7 @@ import os
 import tensorflow_model_optimization as tfmot
 from pathlib import Path
 import src.config as cn
-from src.models import merged_model
+from src.models import get_model
 from src.preprocessing import fetch_data
 import src.utils as utils
 
@@ -21,6 +21,9 @@ def train_test(params):
         + "_"
         + str(params["lambda_loss"])
     )
+
+    if not params["technique"]:
+        my_dir = my_dir + "_Original"
 
     if params["prune"]:
         tf.compat.v1.logging.info("Pruning is activated")
@@ -51,7 +54,7 @@ def train_test(params):
             tf.compat.v1.logging.info("Using Mutliple GPUs for training ...")
             tf.compat.v1.logging.info("Building the model ...")
 
-            model = merged_model(
+            model = get_model(
                 input_shape=params["input_shape"],
                 num_classes=params["output_classes"],
                 lambda_loss=params["lambda_loss"],
@@ -74,13 +77,14 @@ def train_test(params):
 
         model = None
 
-        model = merged_model(
+        model = get_model(
             input_shape=params["input_shape"],
             num_classes=params["output_classes"],
             lambda_loss=params["lambda_loss"],
             additional_loss=params["loss_function"],
             prune=params["prune"],
             prune_val=params["prune_val"],
+            technique=params["technique"],
         )
 
         # print(model.summary())

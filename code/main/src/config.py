@@ -7,7 +7,7 @@ initializer = tf.keras.initializers.he_normal()  # Layer initializations
 BASE_DIR = Path("/root/Master-Thesis/code")  # Base path
 SYNTHETIC_PATH = BASE_DIR / Path("data/synthetic_data/")
 OFFICE_DS_PATH = BASE_DIR / Path("data/office/")
-GTSRB_PATH = Path("/root/Master-Thesis2/code/data/GTSRB/")
+GTSRB_PATH = Path("/root/Master-Thesis/code/data/GTSRB/")
 LOGS_DIR = BASE_DIR / Path("logs/")  # Logs path
 MODEL_PATH = BASE_DIR / Path("model_data/")  # Model path
 EVALUATION = BASE_DIR / Path("evaluation/")  # Evalaution plots path
@@ -20,5 +20,5 @@ DATASET_COMBINATION = {
     "SynSigns_to_GTSRB": 5,
 }
 
-ARCHITECTURE = {"ALexNet": 1, "Vgg16": 2, "Xception": 3}
+ARCHITECTURE = {"Other": 1, "Xception": 3}
 LOSS = {"CORAL": CORAL, "Another": coral_loss}

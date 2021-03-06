@@ -27,7 +27,7 @@ def parse_args():
         "--architecture",
         type=str,
         default="Xception",
-        help="AlexNet/Vgg16/Xception, see config file",
+        help="Xception, see config file",
     )
 
     parser.add_argument(
@@ -58,7 +58,7 @@ def parse_args():
         help="classes in the dataset",
     )
 
-    parser.add_argument("--batch_size", default=8, help="batch size", type=int)
+    parser.add_argument("--batch_size", default=16, help="batch size", type=int)
 
     parser.add_argument(
         "--learning_rate", default=0.0001, help="Learning rate", type=float
@@ -87,10 +87,14 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--prune", help="Target model will be optimized", default=False, type=bool
+        "--technique", help="Orginal if False, Ours if True", default=False, type=bool
     )
 
-    parser.add_argument("--epochs", default=5, help="Epochs", type=int)
+    parser.add_argument(
+        "--prune", help="Target model will be optimized", default=True, type=bool
+    )
+
+    parser.add_argument("--epochs", default=2, help="Epochs", type=int)
 
     parser.add_argument(
         "--save_weights",

@@ -65,32 +65,19 @@ def loss_accuracy_plots(
     plt.show()
 
 
-def display_dataset(data, grayscale=True):
-    """[This method visualizes the images present inside dataset, without label information]
-
-    Args:
-        data ([type]): [description]
-        grayscale (bool, optional): [description]. Defaults to True.
-    """
+def display_dataset(data, label, grayscale=True):
     plt.figure(figsize=(6, 6))
     for i in range(9):
         plt.subplot(3, 3, i + 1)
         plt.xticks([])
         plt.yticks([])
         plt.grid(False)
+        plt.title(f"{label}")
         if grayscale:
             plt.imshow(data[i], cmap=plt.cm.binary)
         else:
             plt.imshow(data[i])
     plt.show()
-
-
-def extract_mnist_m(mnistm_path):
-    with open(mnistm_path, "rb") as f:
-        mnistm_dataset = pickle.load(f, encoding="bytes")
-    mnistmx_train = mnistm_dataset[b"train"]
-    mnistmx_test = mnistm_dataset[b"test"]
-    return mnistmx_train, mnistmx_test
 
 
 def callbacks_fn(params, my_dir):
