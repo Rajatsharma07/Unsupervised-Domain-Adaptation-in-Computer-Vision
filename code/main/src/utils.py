@@ -30,34 +30,43 @@ def define_logger(log_file):
     log.addHandler(fh)
 
 
-def loss_accuracy_plots(
-    hist,
-    log_dir,
-    params,
-):
+def loss_accuracy_plots(hist, log_dir, params):
+
+    font = {"family": "serif", "weight": "normal", "size": 12}
     accuracy = hist.history["accuracy"]
     val_accuracy = hist.history["val_accuracy"]
     loss = hist.history["loss"]
     val_loss = hist.history["val_loss"]
-    plt.figure(figsize=(18, 8))
-    plt.subplot(1, 2, 1)
-    plt.plot(loss, "r", label="Training")
-    plt.plot(val_loss, "r:", label="Validation")
-    plt.legend()
-    plt.title("Training and Validation Loss")
-    plt.xlabel("Epochs")
-    plt.ylabel("Loss")
 
-    plt.subplot(1, 2, 2)
-    plt.plot(accuracy, "g", label="Training")
-    plt.plot(val_accuracy, "g:", label="Validation")
-    plt.legend()
-    plt.title("Training and Validation Accuracy")
-    plt.xlabel("Epochs")
-    plt.ylabel("Accuracy")
+    plt.rc("font", **font)
+    fig, ax = plt.subplots(figsize=(9, 5.5))
+    ax.plot(accuracy, color="green", marker="o", label="Train Accuracy")
+    ax.plot(
+        val_accuracy,
+        linestyle="--",
+        color="green",
+        marker="d",
+        alpha=0.5,
+        label="Test Accuracy",
+    )
+
+    ax.set_xlabel("Epochs", fontsize=12)
+    ax.set_ylabel("Accuracy", fontsize=12)
+    ax.set_facecolor("bisque")
+    ax.legend(loc="upper center", bbox_to_anchor=(0.7, 1.17))
+
+    ax2 = ax.twinx()
+    ax2.plot(loss, color="blue", marker="o", label="Train Loss")
+    ax2.plot(
+        val_loss, linestyle="--", color="blue", marker="d", alpha=0.5, label="Test Loss"
+    )
+    ax2.set_ylabel("Loss", fontsize=14)
+    ax2.legend(loc="upper center", bbox_to_anchor=(0.3, 1.17))
+    # plt.xticks(np.arange(min(x), max(x) + 1, divisions))
     plot_path = os.path.join(
         cn.EVALUATION, (Path(log_dir).parent).name, Path(log_dir).name
     )
+
     Path(plot_path).mkdir(parents=True, exist_ok=True)
     tf.compat.v1.logging.info("Plots created at: " + plot_path)
     plot_path = os.path.join(plot_path, "Accuracy_Loss_Plots.png")
@@ -122,7 +131,7 @@ def callbacks_fn(params, my_dir):
     """Early Stopping Callback """
     early_stopping_callback = tf.keras.callbacks.EarlyStopping(
         monitor="val_accuracy",
-        patience=15,
+        patience=8,
         verbose=1,
         mode="auto",
     )

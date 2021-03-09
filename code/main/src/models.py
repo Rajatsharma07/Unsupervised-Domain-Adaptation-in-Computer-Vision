@@ -40,8 +40,8 @@ def get_model(
             }
             model = tfmot.sparsity.keras.prune_low_magnitude(model, **pruning_params)
 
-        source_op = model(inputs[0], training=False)
-        target_op = model(inputs[1], training=False)
+        source_op = model(inputs[0])
+        target_op = model(inputs[1])
 
     else:
         # Our Technique
@@ -76,8 +76,8 @@ def get_model(
         for layer in target_model.layers:
             layer._name = layer.name + str("_2")
 
-        source_op = source_model(inputs[0], training=False)
-        target_op = target_model(inputs[1], training=False)
+        source_op = source_model(inputs[0])
+        target_op = target_model(inputs[1])
 
     # Top Layer
     classifier = layers.Dropout(0.3)(source_op)

@@ -19,7 +19,7 @@ def parse_args():
     parser.add_argument(
         "--combination",
         type=str,
-        default="SynSigns_to_GTSRB",
+        default="Amazon_to_Webcam",
         help="pass experiment combination, see config file.",
     )
 
@@ -33,35 +33,35 @@ def parse_args():
     parser.add_argument(
         "--prune_val",
         type=float,
-        default=0.10,
+        default=0.30,
         help="percentage of Pruning",
     )
 
     parser.add_argument(
         "--resize",
         type=int,
-        default=71,
+        default=299,
         help="pass image resizing dimension",
     )
 
     parser.add_argument(
         "--input_shape",
         type=tuple,
-        default=(71, 71, 3),
+        default=(299, 299, 3),
         help="model input shape",
     )
 
     parser.add_argument(
         "--output_classes",
         type=int,
-        default=43,
+        default=31,
         help="classes in the dataset",
     )
 
-    parser.add_argument("--batch_size", default=16, help="batch size", type=int)
+    parser.add_argument("--batch_size", default=8, help="batch size", type=int)
 
     parser.add_argument(
-        "--learning_rate", default=0.0001, help="Learning rate", type=float
+        "--learning_rate", default=0.001, help="Learning rate", type=float
     )
 
     parser.add_argument(
@@ -82,7 +82,7 @@ def parse_args():
     parser.add_argument(
         "--augment",
         help="Augmentation will be applied or not",
-        default=True,
+        default=False,
         type=bool,
     )
 
@@ -96,15 +96,15 @@ def parse_args():
     parser.add_argument(
         "--prune",
         help="Model will be optimized in Original technique, otherwise Target model in our technique",
-        default=False,
+        default=True,
         type=bool,
     )
 
-    parser.add_argument("--epochs", default=2, help="Epochs", type=int)
+    parser.add_argument("--epochs", default=4, help="Epochs", type=int)
 
     parser.add_argument(
         "--save_weights",
-        default=True,
+        default=False,
         help="If yes, weights will be saved, otherwise not",
         type=bool,
     )

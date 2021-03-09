@@ -42,7 +42,7 @@ def augment_ds(image, label, prob=0.2):
     # )
 
     # Flipping Images
-    # image = tf.image.random_flip_left_right(image)
+    image = tf.image.random_flip_left_right(image)
 
     return image, label
 
@@ -75,8 +75,8 @@ def preprocess(image, label):
     # Cast to float32
     image = tf.cast(image, tf.float32)
     label = tf.cast(label, tf.float32)
-    image = tf.keras.applications.efficientnet.preprocess_input(image)
-    image = image / 255.0
+    image = tf.keras.applications.xception.preprocess_input(image)
+    # image = image / 255.0
 
     return image, label
 

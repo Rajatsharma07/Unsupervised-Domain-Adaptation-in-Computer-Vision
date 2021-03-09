@@ -106,6 +106,26 @@ def train_test(params):
 
     """ Model Training """
     tf.compat.v1.logging.info("Training Started....")
+
+    # mnist = tf.keras.datasets.mnist
+    # (mnistx_train, mnisty_train), (
+    #     mnistx_test,
+    #     mnisty_test,
+    # ) = mnist.load_data()
+
+    # mnistx_train = tf.image.resize(
+    #     tf.reshape(mnistx_train[:4000], shape=[-1, 28, 28, 1]),
+    #     [71, 71],
+    #     method="nearest",
+    #     preserve_aspect_ratio=False,
+    #     antialias=True,
+    #     name=None,
+    # )
+    # mnistx_train = tf.image.grayscale_to_rgb(mnistx_train)
+
+    # mnistx_train = tf.cast(mnistx_train, tf.float32)
+    # mnistx_train = tf.keras.applications.xception.preprocess_input(mnistx_train)
+
     hist = None
     hist = model.fit(
         ds_train,
