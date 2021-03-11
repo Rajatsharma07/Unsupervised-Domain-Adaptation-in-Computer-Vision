@@ -27,20 +27,22 @@ You may launch the program with the following command: (have a look at the main.
 - Check the tensorboard logs by: tensorboard --lodir "path to  tb logs"
 - Check **training_logs.csv** for model training logs. (path: *logs/CombinationID_SourceModel_LambdaLossValue/DateTimeStampValue*)
 
-
 **python main.py  
---combination=1
---architecture=4
+--combination="Amazon_to_Webcam"
+--architecture="Xception"
 --batch_size=16
 --resize=299
 --learning_rate=0.0001
 --mode="train_test"
 --lambda_loss=0.5  
 --epochs=50
+--input_shape=(299,299,3)
+--output_classes=31
+--loss_function="CORAL"
+--augment=True
+--prune=True
+--prune_val=0.30
+--technique=True
 --save_weights=True
 --save_model=True 
 --use_multiGPU=False**
-
-## Status (In Progress):
-  - Preprocessing for Synthetic Signs to German Traffic Signs Sigal Domain Adaptation.
-  - Model optimization with Weight Pruning.
