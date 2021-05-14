@@ -10,6 +10,14 @@ import src.config as cn
 import numpy as np
 import tensorflow_model_optimization as tfmot
 import tempfile
+import seaborn as sns
+import bokeh
+import numpy as np
+import matplotlib.pyplot as plt
+import zipfile
+import pickle
+import datetime
+import os
 
 
 def define_logger(log_file):
@@ -170,16 +178,161 @@ def callbacks_fn(params, my_dir):
     return callback_list, log_dir
 
 
-def get_gzipped_model_size(model):
-    # Returns size of gzipped model, in bytes.
-    import os
-    import zipfile
+def test_accuracy(
+    model,
+    test_set=None,
+    test_labels=None,
+    batch=None,
+    verbose=1,
+    tf_dataset=None,
+    is_tfdataset=False,
+):
+    """[This method gives test_accuracy as on output]
 
-    _, keras_file = tempfile.mkstemp(".h5")
-    model.save(keras_file, include_optimizer=False)
+    Args:
+        model ([keras.Model]): [Keras model]
+        test_set ([type], optional): [test dataset]. Defaults to None.
+        test_labels ([type], optional): [test labels]. Defaults to None.
+        batch ([type], optional): [description]. Defaults to None.
+        verbose (int, optional): [verbose access]. Defaults to 1.
+        tf_dataset ([type], optional): [TFDS dataset]. Defaults to None.
+        is_tfdataset (bool, optional): [Yes if TF data pipeline is used]. Defaults to False.
+    """
+    if is_tfdataset:
+        loss, accuracy = model.evaluate(tf_dataset, verbose=verbose, batch_size=batch)
+    else:
+        loss, accuracy = model.evaluate(
+            test_set, test_labels, verbose=verbose, batch_size=batch
+        )
+    tf.compat.v1.logging.info(f"Test loss: {loss}, Test Accuracy: {accuracy}")
 
-    _, zipped_file = tempfile.mkstemp(".zip")
-    with zipfile.ZipFile(zipped_file, "w", compression=zipfile.ZIP_DEFLATED) as f:
-        f.write(keras_file)
 
-    return os.path.getsize(zipped_file)
+def pruning_plots(
+    rows,
+    cols,
+    count,
+    x,
+    y,
+    names,
+    figsize=(12, 5),
+    x_divisions=1,
+    y_divisions=10,
+    achor_box=(0.7, 1.18),
+    save_file="temp.pdf",
+):
+    plt.close("all")
+    font = {"family": "serif", "weight": "normal", "size": 14}
+
+    plt.rc("font", **font)
+    fig = plt.figure()
+    plt.rcParams["figure.figsize"] = figsize
+    count = list(range(count))
+    for i, name in zip(count, names):
+        ax = plt.subplot(rows, cols, i + 1)
+        ax.plot(
+            x[i],
+            y[i][0],
+            color="blue",
+            linestyle="dashed",
+            marker="o",
+            label="Best Accuracy",
+        )
+        ax.plot(x[i], y[i][1], color="green", marker="s", label="Pruned Accuracy")
+        ax.set_facecolor("bisque")
+        ax.set_xlabel("target_sparsity")
+        ax.title.set_text(name)
+        ax.set_ylabel("test accuracy", fontsize=12)
+        if i != 4:
+            plt.xticks(np.arange(min(x[i]), max(x[i]) + 1, x_divisions))
+        else:
+            plt.xticks(np.arange(0, 100, 8))
+        plt.yticks(np.arange(0, max(y[i][0]) + 20, y_divisions))
+    ax.legend(loc="upper center", bbox_to_anchor=achor_box)
+    plt.subplots_adjust(hspace=0.35, wspace=None)
+    fig.savefig(save_file, dpi=fig.dpi, bbox_inches="tight")
+    return plt
+
+
+if __name__ == "__main__":
+    y1 = [
+        55.5,
+        56.6,
+        56,
+        56,
+        55.22,
+        60,
+        55,
+        57.86,
+        53,
+        49,
+        50,
+        51,
+        55,
+        60.1,
+        55.84,
+        57.35,
+        50,
+        51,
+        33,
+    ]
+    y11 = [80] * len(y1)
+    y2 = [
+        65.26,
+        68,
+        67.26,
+        64.9,
+        63.25,
+        61.64,
+        65,
+        61.24,
+        65,
+        63.45,
+        65.26,
+        62.85,
+        69.47,
+        69.27,
+        65.46,
+        69.27,
+        64.65,
+        60,
+        46.78,
+    ]
+    y22 = [81] * len(y2)
+    y3 = [32, 32.41, 31.13, 39, 34.3, 36.38, 36.63, 38.33, 34, 28.18]
+    y33 = [63.50] * len(y3)
+
+    y4 = [36.74, 30.38, 37.52, 37.52, 34.3, 39, 39.7, 39.65, 27.5, 19]
+    y44 = [62.36] * len(y4)
+
+    y5 = [
+        66.08,
+        68.57,
+        70.2,
+        66.26,
+        69.2,
+        69.32,
+        71.3,
+        70.37,
+        73.30,
+        71.5,
+        69.62,
+        70,
+        68.23,
+    ]
+    y55 = [77.75] * len(y5)
+    x1 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50, 60, 70, 80, 85, 90]
+    x3 = x1[9:]
+    x5 = [2.5, 5, 7.5, 10, 20, 30, 40, 50, 60, 70, 80, 85, 90]
+
+    pruning_plots(
+        3,
+        2,
+        5,
+        x=[x1, x1, x3, x3, x5],
+        y=[[y11, y1], [y22, y2], [y33, y3], [y44, y4], [y55, y5]],
+        x_divisions=8,
+        figsize=(15, 16),
+        achor_box=(0.75, 3),
+        names=["A->W", "A->D", "W->A", "D->A", "S->G"],
+        save_name="MBM_pruning.pdf",
+    )

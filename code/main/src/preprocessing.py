@@ -34,15 +34,8 @@ def augment_ds(image, label, prob=0.2):
     image = tf.image.random_brightness(image, max_delta=0.4)
     image = tf.image.random_contrast(image, lower=0.3, upper=1.2)
 
-    # # Rotating Images
-    # image = tf.cond(
-    #     tf.random.uniform(shape=[], minval=0, maxval=1) < prob,
-    #     lambda: tf.image.rot90(image, k=1),
-    #     lambda: image,
-    # )
-
     # Flipping Images
-    image = tf.image.random_flip_left_right(image)
+    # image = tf.image.random_flip_left_right(image)
 
     return image, label
 
@@ -76,7 +69,6 @@ def preprocess(image, label):
     image = tf.cast(image, tf.float32)
     label = tf.cast(label, tf.float32)
     image = tf.keras.applications.xception.preprocess_input(image)
-    # image = image / 255.0
 
     return image, label
 

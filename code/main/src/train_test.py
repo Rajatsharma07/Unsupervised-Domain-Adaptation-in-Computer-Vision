@@ -2,12 +2,17 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.utils import plot_model
 import os
+from tensorflow.python.ops.gen_batch_ops import batch
 import tensorflow_model_optimization as tfmot
 from pathlib import Path
 import src.config as cn
 from src.models import get_model
 from src.preprocessing import fetch_data
 import src.utils as utils
+import numpy as np
+import pandas as pd
+import seaborn as sn
+import matplotlib.pyplot as plt
 
 
 def train_test(params):
@@ -107,25 +112,6 @@ def train_test(params):
     """ Model Training """
     tf.compat.v1.logging.info("Training Started....")
 
-    # mnist = tf.keras.datasets.mnist
-    # (mnistx_train, mnisty_train), (
-    #     mnistx_test,
-    #     mnisty_test,
-    # ) = mnist.load_data()
-
-    # mnistx_train = tf.image.resize(
-    #     tf.reshape(mnistx_train[:4000], shape=[-1, 28, 28, 1]),
-    #     [71, 71],
-    #     method="nearest",
-    #     preserve_aspect_ratio=False,
-    #     antialias=True,
-    #     name=None,
-    # )
-    # mnistx_train = tf.image.grayscale_to_rgb(mnistx_train)
-
-    # mnistx_train = tf.cast(mnistx_train, tf.float32)
-    # mnistx_train = tf.keras.applications.xception.preprocess_input(mnistx_train)
-
     hist = None
     hist = model.fit(
         ds_train,
@@ -184,3 +170,70 @@ def train_test(params):
         )
 
     return model, hist, results
+
+
+def evaluate(model_path, class_names_list, params, save_file, figsize=(17.5, 14)):
+    """[This method generates a Heat-Map, Confusion matrix and provides a count of Correct & Incorrect predictions]
+
+    Args:
+        model_path ([keras.Model]): [path of trained keras model]
+        class_names_list ([type]): [class labels]
+        params ([dict]): [Argparse dictionary]
+    """
+    plt.close("all")
+    font = {"family": "serif", "weight": "normal", "size": 13}
+
+    plt.rc("font", **font)
+    plt.xticks(rotation=90)
+    # Featch the test dataset
+    ds_train, ds_test = fetch_data(params)
+
+    # ds_test_labels = ds_test.map(lambda x, y: y)
+    true_categories = tf.concat([y for x, y in ds_test.unbatch()], axis=0)
+
+    # Loading the trained model
+    model = keras.models.load_model(model_path)
+
+    # Predict the classes on the test dataset
+    y_pred = model.predict(ds_test.unbatch().batch(1))
+    y_pred = y_pred.argmax(axis=-1)
+    # y_pred = np.argmax(y_prob, axis=1)
+
+    con_mat = tf.math.confusion_matrix(
+        labels=true_categories, predictions=tf.squeeze(y_pred)
+    ).numpy()
+
+    # class_labels = [val + "-class" for val in class_names_list]
+
+    tf.compat.v1.logging.info(f"Total Test Cases: {con_mat.sum()}")
+    temp_arr = np.eye(len(class_names_list))
+    final_conf_mat = con_mat * temp_arr
+    correct_classifications = final_conf_mat.sum()
+    incorrect_classifications = con_mat.sum() - correct_classifications
+
+    tf.compat.v1.logging.info(
+        f"Correct classifications: {int(correct_classifications)}"
+    )
+
+    tf.compat.v1.logging.info(
+        f"Incorrect classifications: {int(incorrect_classifications)}"
+    )
+
+    pd.set_option("max_columns", None)
+    con_mat_df = pd.DataFrame(con_mat, index=class_labels, columns=class_labels)
+
+    # Generating HeatMaps
+    plt.rcParams["figure.figsize"] = figsize
+    sn.heatmap(con_mat_df, cmap="YlGnBu")
+
+    plot_path = os.path.join(model_path, save_file)
+    # plt.savefig(plot_path)
+    plt.savefig(plot_path)
+    tf.compat.v1.logging.info(f"Evaluation plot saved at {plot_path}")
+    plt.show()
+    return plt
+
+
+if __name__ == "__main__":
+    model_path = "/root/Master-Thesis3/code/model_data/5_Xception_CORAL_0.75_Original/20210307-181912/model"
+    plot = evaluate(model_path, params)

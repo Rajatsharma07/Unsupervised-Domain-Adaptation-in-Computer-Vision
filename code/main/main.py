@@ -1,14 +1,15 @@
 import tensorflow as tf
 import os
 import argparse
-from src.train_test import train_test
+from src.train_test import train_test, evaluate
+import numpy as np
 
 # from tensorflow.python.client import device_lib
 
 # print(device_lib.list_local_devices())
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
-os.environ["CUDA_VISIBLE_DEVICES"] = "7"
+os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 physical_devices = tf.config.list_physical_devices("GPU")
 for device in physical_devices:
     tf.config.experimental.set_memory_growth(device, True)
@@ -19,7 +20,7 @@ def parse_args():
     parser.add_argument(
         "--combination",
         type=str,
-        default="Amazon_to_Webcam",
+        default="SynSigns_to_GTSRB",
         help="pass experiment combination, see config file.",
     )
 
@@ -40,32 +41,32 @@ def parse_args():
     parser.add_argument(
         "--resize",
         type=int,
-        default=299,
+        default=71,
         help="pass image resizing dimension",
     )
 
     parser.add_argument(
         "--input_shape",
         type=tuple,
-        default=(299, 299, 3),
+        default=(71, 71, 3),
         help="model input shape",
     )
 
     parser.add_argument(
         "--output_classes",
         type=int,
-        default=31,
+        default=43,
         help="classes in the dataset",
     )
 
-    parser.add_argument("--batch_size", default=8, help="batch size", type=int)
+    parser.add_argument("--batch_size", default=16, help="batch size", type=int)
 
     parser.add_argument(
         "--learning_rate", default=0.001, help="Learning rate", type=float
     )
 
     parser.add_argument(
-        "--mode", help="train_test or eval options", default="train_test", type=str
+        "--mode", help="train_test or eval options", default="eval", type=str
     )
 
     parser.add_argument(
@@ -82,7 +83,7 @@ def parse_args():
     parser.add_argument(
         "--augment",
         help="Augmentation will be applied or not",
-        default=False,
+        default=True,
         type=bool,
     )
 
@@ -96,7 +97,7 @@ def parse_args():
     parser.add_argument(
         "--prune",
         help="Model will be optimized in Original technique, otherwise Target model in our technique",
-        default=True,
+        default=False,
         type=bool,
     )
 
@@ -104,7 +105,7 @@ def parse_args():
 
     parser.add_argument(
         "--save_weights",
-        default=False,
+        default=True,
         help="If yes, weights will be saved, otherwise not",
         type=bool,
     )
@@ -145,7 +146,20 @@ def main():
         model, hist, results = train_test(params)
 
     elif params["mode"] == "eval":
-        pass
+        evaluate(
+            model_path="/root/Master-Thesis3/code/model_data/5_Xception_CORAL_0.75_Original/20210307-181912/model",
+            params=params,
+            class_names_list=list(map(lambda x: str(x), np.arange(1, 44))),
+            save_file="5_MBM_1.pdf",
+            figsize=(17.5, 14),
+        )
+        evaluate(
+            model_path="/root/Master-Thesis3/code/model_data/5_Xception_CORAL_0.75_Original/20210307-181912/model",
+            params=params,
+            class_names_list=list(map(lambda x: str(x), np.arange(1, 44))),
+            save_file="5_MBM_2.pdf",
+            figsize=(17, 14),
+        )
 
 
 if __name__ == "__main__":
