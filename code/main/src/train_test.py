@@ -220,7 +220,7 @@ def evaluate(model_path, class_names_list, params, save_file, figsize=(17.5, 14)
     )
 
     pd.set_option("max_columns", None)
-    con_mat_df = pd.DataFrame(con_mat, index=class_labels, columns=class_labels)
+    con_mat_df = pd.DataFrame(con_mat, index=class_names_list, columns=class_names_list)
 
     # Generating HeatMaps
     plt.rcParams["figure.figsize"] = figsize
