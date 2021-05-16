@@ -9,7 +9,7 @@ import numpy as np
 # print(device_lib.list_local_devices())
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
-os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+os.environ["CUDA_VISIBLE_DEVICES"] = "7"
 physical_devices = tf.config.list_physical_devices("GPU")
 for device in physical_devices:
     tf.config.experimental.set_memory_growth(device, True)
@@ -20,7 +20,7 @@ def parse_args():
     parser.add_argument(
         "--combination",
         type=str,
-        default="SynSigns_to_GTSRB",
+        default="Amazon_to_Webcam",
         help="pass experiment combination, see config file.",
     )
 
@@ -41,21 +41,21 @@ def parse_args():
     parser.add_argument(
         "--resize",
         type=int,
-        default=71,
+        default=299,
         help="pass image resizing dimension",
     )
 
     parser.add_argument(
         "--input_shape",
         type=tuple,
-        default=(71, 71, 3),
+        default=(299, 299, 3),
         help="model input shape",
     )
 
     parser.add_argument(
         "--output_classes",
         type=int,
-        default=43,
+        default=31,
         help="classes in the dataset",
     )
 
@@ -83,7 +83,7 @@ def parse_args():
     parser.add_argument(
         "--augment",
         help="Augmentation will be applied or not",
-        default=True,
+        default=False,
         type=bool,
     )
 
@@ -147,18 +147,8 @@ def main():
 
     elif params["mode"] == "eval":
         evaluate(
-            model_path="/root/Master-Thesis3/code/model_data/5_Xception_CORAL_0.75_Original/20210307-181912/model",
+            model_path="/root/Master-Thesis/code/model_data/1_Xception_CORAL_0.5_Original/20210306-172240/model",
             params=params,
-            class_names_list=list(map(lambda x: str(x), np.arange(1, 44))),
-            save_file="5_MBM_1.pdf",
-            figsize=(17.5, 14),
-        )
-        evaluate(
-            model_path="/root/Master-Thesis3/code/model_data/5_Xception_CORAL_0.75_Original/20210307-181912/model",
-            params=params,
-            class_names_list=list(map(lambda x: str(x), np.arange(1, 44))),
-            save_file="5_MBM_2.pdf",
-            figsize=(17, 14),
         )
 
 

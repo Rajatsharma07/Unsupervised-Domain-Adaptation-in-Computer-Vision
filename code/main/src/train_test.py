@@ -2,7 +2,6 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.utils import plot_model
 import os
-from tensorflow.python.ops.gen_batch_ops import batch
 import tensorflow_model_optimization as tfmot
 from pathlib import Path
 import src.config as cn
@@ -13,6 +12,9 @@ import numpy as np
 import pandas as pd
 import seaborn as sn
 import matplotlib.pyplot as plt
+from sklearn.metrics import classification_report, roc_auc_score
+import pandas
+from scipy.special import softmax
 
 
 def train_test(params):
@@ -172,68 +174,81 @@ def train_test(params):
     return model, hist, results
 
 
-def evaluate(model_path, class_names_list, params, save_file, figsize=(17.5, 14)):
-    """[This method generates a Heat-Map, Confusion matrix and provides a count of Correct & Incorrect predictions]
+def evaluate(model_path, params, figsize=(20, 15)):
+    """[This method generates a Heat-Map, providesConfusion matrix and provides
+    classification report and AUC score]
 
     Args:
         model_path ([keras.Model]): [path of trained keras model]
-        class_names_list ([type]): [class labels]
         params ([dict]): [Argparse dictionary]
+        figsize (tuple): [Plot figure size]
     """
     plt.close("all")
-    font = {"family": "serif", "weight": "normal", "size": 13}
-
+    font = {"family": "serif", "weight": "bold", "size": 10}
     plt.rc("font", **font)
     plt.xticks(rotation=90)
-    # Featch the test dataset
-    ds_train, ds_test = fetch_data(params)
+    plt.yticks(rotation=90)
 
-    # ds_test_labels = ds_test.map(lambda x, y: y)
-    true_categories = tf.concat([y for x, y in ds_test.unbatch()], axis=0)
+    files_path = os.path.join(cn.BASE_DIR, (Path(model_path).parent).name)
+    Path(files_path).mkdir(parents=True, exist_ok=True)
 
-    # Loading the trained model
+    utils.define_logger(os.path.join(files_path, "evaluations.log"))
+
+    tf.compat.v1.logging.info("Fetch the test dataset ...")
+    _, ds_test = fetch_data(params)
+
+    true_categories = tf.concat([y for x, y in ds_test], axis=0)
+    np.save(os.path.join(files_path, "y_true"), true_categories.numpy())
+
+    tf.compat.v1.logging.info("Loading the trained model ...")
     model = keras.models.load_model(model_path)
 
-    # Predict the classes on the test dataset
-    y_pred = model.predict(ds_test.unbatch().batch(1))
-    y_pred = y_pred.argmax(axis=-1)
-    # y_pred = np.argmax(y_prob, axis=1)
+    tf.compat.v1.logging.info("Recompiling the model ...")
+    model.compile(
+        optimizer=keras.optimizers.Adam(learning_rate=params["learning_rate"]),
+        loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+        metrics=["accuracy"],
+    )
 
-    con_mat = tf.math.confusion_matrix(
-        labels=true_categories, predictions=tf.squeeze(y_pred)
+    tf.compat.v1.logging.info("Predict the classes on the test dataset ...")
+    y_pred = model.predict(ds_test)
+    np.save(os.path.join(files_path, "y_prob"), y_pred)
+
+    predicted_categories = tf.argmax(y_pred, axis=1)
+    np.save(
+        os.path.join(files_path, "predicted_categories"), predicted_categories.numpy()
+    )
+
+    tf.compat.v1.logging.info("Generating Classification Report ...")
+    report = classification_report(
+        true_categories, predicted_categories, output_dict=True
+    )
+
+    df = pandas.DataFrame(report).transpose()
+    df.to_excel(os.path.join(files_path, "report.xlsx"))
+    df = df.sort_values("f1-score")
+    df.to_excel(os.path.join(files_path, "sorted.xlsx"))
+
+    score = roc_auc_score(true_categories, softmax(y_pred, axis=1), multi_class="ovr")
+    tf.compat.v1.logging.info("AUC score: " + str(score))
+
+    conf_matrix = tf.math.confusion_matrix(
+        labels=true_categories,
+        predictions=predicted_categories,
     ).numpy()
+    np.save(os.path.join(files_path, "conf_matrix"), conf_matrix)
 
-    # class_labels = [val + "-class" for val in class_names_list]
-
-    tf.compat.v1.logging.info(f"Total Test Cases: {con_mat.sum()}")
-    temp_arr = np.eye(len(class_names_list))
-    final_conf_mat = con_mat * temp_arr
-    correct_classifications = final_conf_mat.sum()
-    incorrect_classifications = con_mat.sum() - correct_classifications
-
-    tf.compat.v1.logging.info(
-        f"Correct classifications: {int(correct_classifications)}"
-    )
-
-    tf.compat.v1.logging.info(
-        f"Incorrect classifications: {int(incorrect_classifications)}"
-    )
-
-    pd.set_option("max_columns", None)
-    con_mat_df = pd.DataFrame(con_mat, index=class_names_list, columns=class_names_list)
-
-    # Generating HeatMaps
+    tf.compat.v1.logging.info("Generating Heatmaps ...")
     plt.rcParams["figure.figsize"] = figsize
-    sn.heatmap(con_mat_df, cmap="YlGnBu")
+    figure = sn.heatmap(conf_matrix, xticklabels=1, yticklabels=1)
+    plt.xlabel("Actual Predictions", fontsize=11, fontweight="bold")
+    plt.ylabel("Predicted Classes", fontsize=11, fontweight="bold")
 
-    plot_path = os.path.join(model_path, save_file)
-    # plt.savefig(plot_path)
+    plot_path = os.path.join(Path(files_path), "Heatmap.pdf")
     plt.savefig(plot_path)
+    figure = figure.get_figure()
+    figure.savefig(plot_path)
     tf.compat.v1.logging.info(f"Evaluation plot saved at {plot_path}")
     plt.show()
+
     return plt
-
-
-if __name__ == "__main__":
-    model_path = "/root/Master-Thesis3/code/model_data/5_Xception_CORAL_0.75_Original/20210307-181912/model"
-    plot = evaluate(model_path, params)
