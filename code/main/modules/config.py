@@ -1,6 +1,6 @@
 import tensorflow as tf
 from pathlib import Path
-from src.loss import CORAL, coral_loss
+from modules.loss import CORAL, coral_loss
 
 initializer = tf.keras.initializers.he_normal()  # Layer initializations
 

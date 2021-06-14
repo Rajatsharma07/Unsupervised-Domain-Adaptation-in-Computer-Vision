@@ -2,11 +2,10 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 import os
 import logging
-import pickle
 from pathlib import Path
 from tensorflow.keras.callbacks import CSVLogger
 import datetime
-import src.config as cn
+import modules.config as cn
 import numpy as np
 import tensorflow_model_optimization as tfmot
 import tempfile
@@ -14,8 +13,6 @@ import seaborn as sns
 import bokeh
 import numpy as np
 import matplotlib.pyplot as plt
-import zipfile
-import pickle
 import datetime
 import os
 
@@ -251,88 +248,3 @@ def pruning_plots(
     plt.subplots_adjust(hspace=0.35, wspace=None)
     fig.savefig(save_file, dpi=fig.dpi, bbox_inches="tight")
     return plt
-
-
-if __name__ == "__main__":
-    y1 = [
-        55.5,
-        56.6,
-        56,
-        56,
-        55.22,
-        60,
-        55,
-        57.86,
-        53,
-        49,
-        50,
-        51,
-        55,
-        60.1,
-        55.84,
-        57.35,
-        50,
-        51,
-        33,
-    ]
-    y11 = [80] * len(y1)
-    y2 = [
-        65.26,
-        68,
-        67.26,
-        64.9,
-        63.25,
-        61.64,
-        65,
-        61.24,
-        65,
-        63.45,
-        65.26,
-        62.85,
-        69.47,
-        69.27,
-        65.46,
-        69.27,
-        64.65,
-        60,
-        46.78,
-    ]
-    y22 = [81] * len(y2)
-    y3 = [32, 32.41, 31.13, 39, 34.3, 36.38, 36.63, 38.33, 34, 28.18]
-    y33 = [63.50] * len(y3)
-
-    y4 = [36.74, 30.38, 37.52, 37.52, 34.3, 39, 39.7, 39.65, 27.5, 19]
-    y44 = [62.36] * len(y4)
-
-    y5 = [
-        66.08,
-        68.57,
-        70.2,
-        66.26,
-        69.2,
-        69.32,
-        71.3,
-        70.37,
-        73.30,
-        71.5,
-        69.62,
-        70,
-        68.23,
-    ]
-    y55 = [77.75] * len(y5)
-    x1 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50, 60, 70, 80, 85, 90]
-    x3 = x1[9:]
-    x5 = [2.5, 5, 7.5, 10, 20, 30, 40, 50, 60, 70, 80, 85, 90]
-
-    pruning_plots(
-        3,
-        2,
-        5,
-        x=[x1, x1, x3, x3, x5],
-        y=[[y11, y1], [y22, y2], [y33, y3], [y44, y4], [y55, y5]],
-        x_divisions=8,
-        figsize=(15, 16),
-        achor_box=(0.75, 3),
-        names=["A->W", "A->D", "W->A", "D->A", "S->G"],
-        save_name="MBM_pruning.pdf",
-    )

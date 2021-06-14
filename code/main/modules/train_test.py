@@ -4,10 +4,10 @@ from tensorflow.keras.utils import plot_model
 import os
 import tensorflow_model_optimization as tfmot
 from pathlib import Path
-import src.config as cn
-from src.models import get_model
-from src.preprocessing import fetch_data
-import src.utils as utils
+import modules.config as cn
+from modules.models import get_model
+from modules.preprocessing import fetch_data
+import modules.utils as utils
 import numpy as np
 import pandas as pd
 import seaborn as sn
@@ -175,7 +175,7 @@ def train_test(params):
 
 
 def evaluate(model_path, params, figsize=(20, 15)):
-    """[This method generates a Heat-Map, providesConfusion matrix and provides
+    """[This method generates a Heat-Map, provides Confusion matrix and provides
     classification report and AUC score]
 
     Args:

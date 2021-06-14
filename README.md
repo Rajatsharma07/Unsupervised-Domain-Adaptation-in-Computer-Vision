@@ -1,5 +1,6 @@
 
 
+
 # Master Thesis, University of Passau
 ### Topic: Domain-Adaptation
 - In this thesis, the development of a generalizable domain adaptation model technique is discussed, which could help to solve various computer vision tasks. The model is trained on popular visual domain datasets for image classification tasks, and it's performance is evaluated compared to other available domain adaptation methods.
@@ -7,18 +8,17 @@
 
 ## Description about the code: 
 1.  **models.py** module defines the source & target models. **Xception Network & Top layers**
-2.  **config.py** module defines various parameters like set paths, experiment datasets combination ids, etc. **Other configurations may be added in future**
-3.  **loss.py** defines the addtional loss methods.
+2.  **config.py** module defines various parameters like set paths, experiment datasets combination ids, etc. 
+3.  **loss.py** defines the addtional loss methods. **Deep CORAL loss, KL Divergence, etc.**
 4.  **preprocessing.py** module defines data preprocessing pipeline with various dataset combinations including Data augmentation. 
-5. **train_test.py** is a helper module which defines training and evaluation methods.
-6. **evals_helper.py** is a helper module which defines evaluation methods in detail. 
-7. **utlis.py** defines various plotting, helper methods and various logging paths like tensorboard, csv, model checkpoint, etc.
-8. **main.py** is the runnable script which defines various command line arguments of the experiment. **In progress mode = "eval", script is running for mode="train_test"**
-9. *logs/CombinationID_SourceModel_LambdaLossValue/experiments.log* defines the run logs.
-10. Models & model weights are stored at **model_data** folder.
-11. **requirements.txt** defines the libraries dependency of the experiments.
-12. Bash script  to run multiple expleriments. **run.sh**.
-13. **evaluation** folder shows the loss/accuracy plots, also can be viewed in Tensorboards.
+5. **train_test.py** is a helper module which defines training and evaluation methods, including Evaluatiion metrics like Confusion Matrix, etc.
+6. **utlis.py** defines various plotting, helper methods and various logging paths like tensorboard, csv, model checkpoint, etc.
+7. **main.py** is the runnable script which defines various command line arguments of the experiment. **In progress mode = "eval", script is running for mode="train_test"**
+8. *logs/CombinationID_SourceModel_LambdaLossValue/experiments.log* defines the run logs.
+9. Models & model weights are stored at **model_data** folder.
+10. **requirements.txt** defines the libraries dependency of the experiments.
+11. Bash script  to run multiple expleriments. **run.sh**.
+12. **evaluation** folder shows the loss/accuracy plots, also can be viewed in Tensorboards.
 
 You may launch the program with the following command: (have a look at the main.py script for more informations about the attributes)
 

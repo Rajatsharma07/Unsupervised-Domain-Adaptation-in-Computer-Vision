@@ -1,12 +1,8 @@
 import tensorflow as tf
 import os
 import argparse
-from src.train_test import train_test, evaluate
+from modules.train_test import train_test, evaluate
 import numpy as np
-
-# from tensorflow.python.client import device_lib
-
-# print(device_lib.list_local_devices())
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 os.environ["CUDA_VISIBLE_DEVICES"] = "7"
