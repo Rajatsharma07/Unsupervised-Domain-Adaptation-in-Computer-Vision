@@ -19,31 +19,28 @@
 10. **[requirements.txt](https://github.com/Rajatsharma07/Master-Thesis/blob/main/code/requirements.txt)** defines the libraries dependency of the experiments. 
 11. Bash script  to run multiple expleriments. **[run.sh](https://github.com/Rajatsharma07/Master-Thesis/blob/main/code/run.sh)**.
 12. **evaluation** folder shows the loss/accuracy plots, also can be viewed in Tensorboards.
+13.  **model_data** folder stores the intermediate and final weights of the model.
+14. **logs** folder saves the logs for a particular run and create *experiments.log* file.
+15. **data** folder contains the datasets.
+16. Monitor **experiments.log** for log paths and script progress.
+17. Check the **tensorboard logs** by: tensorboard --lodir "path to  tb logs"
+18. Check **training_logs.csv** for model training logs. 
+19.  **Log paths**: *logs/CombinationID_BackboneModel_DomainLossUsed_LambdaWeight_Original/DateTimeStampValue*) -> MBM
+*logs/CombinationID_BackboneModel_DomainLossUsed_LambdaWeight/DateTimeStampValue*) -> CDAN
+20.  **For Pruning**: 
+*logs/CombinationID_BackboneModel_DomainLossUsed_LambdaWeight_PrunedValue/DateTimeStampValue*) -> CDAN
+*logs/CombinationID_BackboneModel_DomainLossUsed_LambdaWeight_Original_PrunedValue/DateTimeStampValue*) -> MBM
 
-You may launch the program with the following command: (have a look at the main.py script for more informations about the attributes)
 
-- Create conda environment: Install all the required dependencies using both **pip** and **conda** as mentioned in the **requirements.txt** file.
-- Activate tf environment by : **conda activate tf**
--  Monitor **experiments.log** for log paths and script progress.
-- Check the tensorboard logs by: tensorboard --lodir "path to  tb logs"
-- Check **training_logs.csv** for model training logs. (path: *logs/CombinationID_SourceModel_LambdaLossValue/DateTimeStampValue*)
+### Steps to execute the code: 
+ 1. Create conda environment (tf): Install all the required dependencies using both **pip** and **conda** as mentioned in the **requirements.txt** file.
+ 2. Activate conda environment by : **conda activate tf**.
+ 3. You may launch the program by executing the [main.py](https://github.com/Rajatsharma07/Master-Thesis/blob/main/code/main/main.py) script directly from an IDE or via terminal.
+ 4. Also, one can run the shell command **sh run.sh** in order to run the series of python experiments.
 
-**python main.py  
---combination="Amazon_to_Webcam"
---architecture="Xception"
---batch_size=16
---resize=299
---learning_rate=0.0001
---mode="train_test"
---lambda_loss=0.5  
---epochs=50
---input_shape=(299,299,3)
---output_classes=31
---loss_function="CORAL"
---augment=True
---prune=True
---prune_val=0.30
---technique=True
---save_weights=True
---save_model=True 
---use_multiGPU=False**
+### Script parameters: 
+**python main.py 
+--combination="Amazon_to_Webcam"  --architecture="Xception"  --batch_size=16    resize=299  
+--learning_rate=0.0001  --mode="train_test"  --lambda_loss=0.5  --epochs=50  
+--input_shape=(299,299,3)  --output_classes=31  --loss_function="CORAL"  --augment  --prune
+--prune_val=0.30  --technique  --save_weights  --save_model  --use_multiGPU**
