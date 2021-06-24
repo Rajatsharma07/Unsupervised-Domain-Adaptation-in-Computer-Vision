@@ -14,28 +14,26 @@
 5. **[train_test.py](https://github.com/Rajatsharma07/Master-Thesis/blob/main/code/main/modules/train_test.py)** is a helper module which defines training and evaluation methods, including Evaluatiion metrics like Confusion Matrix, etc.
 6. **[utlis.py](https://github.com/Rajatsharma07/Master-Thesis/blob/main/code/main/modules/utils.py)** defines various plotting, helper methods and various logging paths like tensorboard, csv, model checkpoint, etc.
 7. **[main.py](https://github.com/Rajatsharma07/Master-Thesis/blob/main/code/main/main.py)** is the runnable script which defines various command line arguments of the experiment. **In progress mode = "eval", script is running for mode="train_test"**
-8. *logs/CombinationID_SourceModel_LambdaLossValue/experiments.log* defines the run logs.
-9. Models & model weights are stored at **model_data** folder.
-10. **[requirements.txt](https://github.com/Rajatsharma07/Master-Thesis/blob/main/code/requirements.txt)** defines the libraries dependency of the experiments. 
-11. Bash script  to run multiple expleriments. **[run.sh](https://github.com/Rajatsharma07/Master-Thesis/blob/main/code/run.sh)**.
-12. **evaluation** folder shows the loss/accuracy plots, also can be viewed in Tensorboards.
-13.  **model_data** folder stores the intermediate and final weights of the model.
-14. **logs** folder saves the logs for a particular run and create *experiments.log* file.
-15. **data** folder contains the datasets.
-16. Monitor **experiments.log** for log paths and script progress.
-17. Check the **tensorboard logs** by: tensorboard --lodir "path to  tb logs"
-18. Check **training_logs.csv** for model training logs. 
-19.  **Log paths**: *logs/CombinationID_BackboneModel_DomainLossUsed_LambdaWeight_Original/DateTimeStampValue*) -> MBM
+8. **[requirements.txt](https://github.com/Rajatsharma07/Master-Thesis/blob/main/code/requirements.txt)** defines the libraries dependency of the experiments. 
+9. Use shell script  **[run.sh](https://github.com/Rajatsharma07/Master-Thesis/blob/main/code/run.sh)** to run multiple experiments.
+10. **evaluation** folder shows the loss/accuracy plots, also can be viewed in Tensorboards.
+11.  **model_data** folder stores the intermediate and final weights of the model.
+12. **logs** folder saves the logs for a particular run and create *experiments.log* file.
+13. **data** folder contains the datasets.
+14. Monitor **experiments.log** for log paths and script progress.
+15. Check the **tensorboard logs** by: tensorboard --lodir "path to  tb logs"
+16. Check **training_logs.csv** for model training logs. 
+17.  **Log paths**: *logs/CombinationID_BackboneModel_DomainLossUsed_LambdaWeight_Original/DateTimeStampValue*) -> MBM
 *logs/CombinationID_BackboneModel_DomainLossUsed_LambdaWeight/DateTimeStampValue*) -> CDAN
-20.  **For Pruning**: 
+18.  **For Pruning**: 
 *logs/CombinationID_BackboneModel_DomainLossUsed_LambdaWeight_PrunedValue/DateTimeStampValue*) -> CDAN
 *logs/CombinationID_BackboneModel_DomainLossUsed_LambdaWeight_Original_PrunedValue/DateTimeStampValue*) -> MBM
 
 
 ### Steps to execute the code: 
  1. Create conda environment (tf): Install all the required dependencies using both **pip** and **conda** as mentioned in the **requirements.txt** file.
- 2. Activate conda environment by : **conda activate tf**.
- 3. You may launch the program by executing the [main.py](https://github.com/Rajatsharma07/Master-Thesis/blob/main/code/main/main.py) script directly from an IDE or via terminal.
+ 2. Activate conda environment by: **conda activate tf**.
+ 3. You may launch the program by executing the [**main.py**](https://github.com/Rajatsharma07/Master-Thesis/blob/main/code/main/main.py) script directly from an IDE or via terminal.
  4. Also, one can run the shell command **sh run.sh** in order to run the series of python experiments.
 
 ### Script parameters: 
