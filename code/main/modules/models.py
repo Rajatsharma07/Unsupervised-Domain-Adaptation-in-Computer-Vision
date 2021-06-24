@@ -37,7 +37,7 @@ def get_model(
     ]
 
     if not technique:
-        # Original Technique
+        # MBM Technique
         model = tf.keras.applications.Xception(
             include_top=False,
             weights="imagenet",
@@ -57,7 +57,7 @@ def get_model(
         target_op = model(inputs[1])
 
     else:
-        # Our Technique
+        # CDAN technique
         source_model = tf.keras.applications.Xception(
             include_top=False,
             weights="imagenet",
