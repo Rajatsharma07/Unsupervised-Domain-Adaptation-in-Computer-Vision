@@ -138,14 +138,7 @@ dmypy.json
 cython_debug/
 
 # input data and models
-input/
 .vscode/
-logs/
-model_data/assets/
-model_data/variables/
-evaluation/
-variables/
-
 
 # data files
 *.csv
@@ -160,4 +153,3 @@ variables/
 .flake8
 
 # My Local Files
-20210306-172240/

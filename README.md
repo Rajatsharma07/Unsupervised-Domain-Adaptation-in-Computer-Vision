@@ -3,25 +3,26 @@
 
 # Master Thesis, University of Passau
 ### Topic: Domain-Adaptation
-- In this thesis, the development of a generalizable domain adaptation model technique is discussed, which could help to solve various computer vision tasks. The model is trained on popular visual domain datasets for image classification tasks, and it's performance is evaluated compared to other available domain adaptation methods.
--  The "Magnitude based weight pruning" technique is used to perform target feature extractor optimization.
+- In this thesis, the development of a discrepancy based domain adaptation models named MBM (Modified Baseline Network - an extension of Deep CORAL) & CDAN (Custom Domain Adaptive Network) are discussed. The models are trained on popular benchmarked visual recognition domain datasets like Office-31, GTSRB and Synthetic Signs for image classification tasks, and their performances are evaluated compared to other available domain adaptation methods.
+-  The "Magnitude based weight pruning" with *Constant Sparsity* approach is used to perform target feature extractor optimization.
 
 ## Description about the code: 
-1.  **models.py** module defines the source & target models. **Xception Network & Top layers**
-2.  **config.py** module defines various parameters like set paths, experiment datasets combination ids, etc. 
-3.  **loss.py** defines the addtional loss methods. **Deep CORAL loss, KL Divergence, etc.**
-4.  **preprocessing.py** module defines data preprocessing pipeline with various dataset combinations including Data augmentation. 
-5. **train_test.py** is a helper module which defines training and evaluation methods, including Evaluatiion metrics like Confusion Matrix, etc.
-6. **utlis.py** defines various plotting, helper methods and various logging paths like tensorboard, csv, model checkpoint, etc.
-7. **main.py** is the runnable script which defines various command line arguments of the experiment. **In progress mode = "eval", script is running for mode="train_test"**
+1.  **[models.py](https://github.com/Rajatsharma07/Master-Thesis/blob/main/code/main/modules/models.py)** module defines the source & target models. **Xception Network & Top layers**
+2.  **[config.py](https://github.com/Rajatsharma07/Master-Thesis/blob/main/code/main/modules/config.py)** module defines various parameters like set paths, domain adaptation scenarios, backbone model selection, etc. 
+3.  **[loss.py](https://github.com/Rajatsharma07/Master-Thesis/blob/main/code/main/modules/loss.py)** defines the domain alignment loss functions. **Deep CORAL loss, KL Divergence, etc.**
+4.  **[preprocessing.py](https://github.com/Rajatsharma07/Master-Thesis/blob/main/code/main/modules/preprocessing.py)** module defines data preprocessing pipeline with various experimental scenarios including Data augmentation methods. 
+5. **[train_test.py](https://github.com/Rajatsharma07/Master-Thesis/blob/main/code/main/modules/train_test.py)** is a helper module which defines training and evaluation methods, including Evaluatiion metrics like Confusion Matrix, etc.
+6. **[utlis.py](https://github.com/Rajatsharma07/Master-Thesis/blob/main/code/main/modules/utils.py)** defines various plotting, helper methods and various logging paths like tensorboard, csv, model checkpoint, etc.
+7. **[main.py](https://github.com/Rajatsharma07/Master-Thesis/blob/main/code/main/main.py)** is the runnable script which defines various command line arguments of the experiment. **In progress mode = "eval", script is running for mode="train_test"**
 8. *logs/CombinationID_SourceModel_LambdaLossValue/experiments.log* defines the run logs.
 9. Models & model weights are stored at **model_data** folder.
-10. **requirements.txt** defines the libraries dependency of the experiments.
-11. Bash script  to run multiple expleriments. **run.sh**.
+10. **[requirements.txt](https://github.com/Rajatsharma07/Master-Thesis/blob/main/code/requirements.txt)** defines the libraries dependency of the experiments. 
+11. Bash script  to run multiple expleriments. **[run.sh](https://github.com/Rajatsharma07/Master-Thesis/blob/main/code/run.sh)**.
 12. **evaluation** folder shows the loss/accuracy plots, also can be viewed in Tensorboards.
 
 You may launch the program with the following command: (have a look at the main.py script for more informations about the attributes)
 
+- Create conda environment: Install all the required dependencies using both **pip** and **conda** as mentioned in the **requirements.txt** file.
 - Activate tf environment by : **conda activate tf**
 -  Monitor **experiments.log** for log paths and script progress.
 - Check the tensorboard logs by: tensorboard --lodir "path to  tb logs"
