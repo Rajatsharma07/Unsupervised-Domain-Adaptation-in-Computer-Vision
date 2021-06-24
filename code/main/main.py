@@ -5,10 +5,14 @@ from modules.train_test import train_test, evaluate
 import numpy as np
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+
+# Below command selects the the particular GPU for training
 os.environ["CUDA_VISIBLE_DEVICES"] = "7"
+
 physical_devices = tf.config.list_physical_devices("GPU")
 for device in physical_devices:
     tf.config.experimental.set_memory_growth(device, True)
+    # This command does performance improvements
 
 
 def parse_args():
@@ -17,107 +21,109 @@ def parse_args():
         "--combination",
         type=str,
         default="Amazon_to_Webcam",
-        help="pass experiment combination, see config file.",
+        help="Choose domain adaptation scenario, see config file.",
     )
 
     parser.add_argument(
         "--architecture",
         type=str,
         default="Xception",
-        help="Xception, see config file",
+        help="Choose backbone models, see config file",
     )
 
     parser.add_argument(
         "--prune_val",
         type=float,
         default=0.30,
-        help="percentage of Pruning",
+        help="Target sparsity value for pruning",
     )
 
     parser.add_argument(
         "--resize",
         type=int,
         default=299,
-        help="pass image resizing dimension",
+        help="Image resizing dimensions",
     )
 
     parser.add_argument(
         "--input_shape",
         type=tuple,
         default=(299, 299, 3),
-        help="model input shape",
+        help="Model's input shape",
     )
 
     parser.add_argument(
         "--output_classes",
         type=int,
         default=31,
-        help="classes in the dataset",
+        help="Classes in the dataset",
     )
 
-    parser.add_argument("--batch_size", default=16, help="batch size", type=int)
+    parser.add_argument("--batch_size", default=16, help="Batch size", type=int)
 
     parser.add_argument(
         "--learning_rate", default=0.001, help="Learning rate", type=float
     )
 
     parser.add_argument(
-        "--mode", help="train_test or eval options", default="eval", type=str
+        "--mode",
+        help="'train_test' or 'eval' options, see train_test.py module",
+        default="train_test",
+        type=str,
     )
 
     parser.add_argument(
         "--loss_function",
-        help="CORAL/Another",
+        help="Select domain alignment loss function, see loss.py module",
         default="CORAL",
         type=str,
     )
 
     parser.add_argument(
-        "--lambda_loss", help="Additional loss lambda value", default=0.50, type=float
+        "--lambda_loss",
+        help="Weighting factor for domain alignment loss",
+        default=0.50,
+        type=float,
     )
 
     parser.add_argument(
-        "--augment",
-        help="Augmentation will be applied or not",
-        default=False,
-        type=bool,
+        "--augment",  # Default set is false
+        help="To apply data augmentation on the source dataset",
+        action="store_true",
     )
 
     parser.add_argument(
-        "--technique",
-        help="Base technique - if False, Ours - if True",
-        default=False,
-        type=bool,
+        "--technique",  # Default set is false
+        help="Choose techniques, MBM - if false, CDAN - if frue",
+        action="store_true",
     )
 
     parser.add_argument(
-        "--prune",
-        help="Model will be optimized in Original technique, otherwise Target model in our technique",
-        default=False,
-        type=bool,
-    )
-
-    parser.add_argument("--epochs", default=4, help="Epochs", type=int)
-
-    parser.add_argument(
-        "--save_weights",
-        default=True,
-        help="If yes, weights will be saved, otherwise not",
-        type=bool,
+        "--prune",  # Default set is false
+        help="Shared FE will be optimized if MBM, otherwise Target FE will be optimized if CDAN",
+        action="store_true",
     )
 
     parser.add_argument(
-        "--save_model",
-        default=True,
-        help="If yes, model will be saved, otherwise not",
-        type=bool,
+        "--epochs", default=4, help="Epochs to run a particular scenario", type=int
     )
 
     parser.add_argument(
-        "--use_multiGPU",
-        default=False,
+        "--save_weights",  # Default set is false
+        help="To save the intermediate weights of the model when improvement observed in the validation accuracy",
+        action="store_true",
+    )
+
+    parser.add_argument(
+        "--save_model",  # Default set is false
+        help="If yes, final trained model will be saved, otherwise not",
+        action="store_true",
+    )
+
+    parser.add_argument(
+        "--use_multiGPU",  # Default set is false
         help="If yes, multiple single host GPUs will be used, otherwise not",
-        type=bool,
+        action="store_true",
     )
 
     return parser

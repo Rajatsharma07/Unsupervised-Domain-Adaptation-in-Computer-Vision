@@ -13,12 +13,13 @@ import pandas as pd
 import seaborn as sn
 import matplotlib.pyplot as plt
 from sklearn.metrics import classification_report, roc_auc_score
-import pandas
 from scipy.special import softmax
 
 
 def train_test(params):
+    """[This method performs the model training and tests on the target domain at the end of training.]"""
 
+    # Create directory for unique logs
     my_dir = (
         str(cn.DATASET_COMBINATION[params["combination"]])
         + "_"
@@ -176,7 +177,7 @@ def train_test(params):
 
 def evaluate(model_path, params, figsize=(20, 15)):
     """[This method generates a Heat-Map, provides Confusion matrix and provides
-    classification report and AUC score]
+    classification report and AUC score.]
 
     Args:
         model_path ([keras.Model]): [path of trained keras model]
@@ -224,7 +225,7 @@ def evaluate(model_path, params, figsize=(20, 15)):
         true_categories, predicted_categories, output_dict=True
     )
 
-    df = pandas.DataFrame(report).transpose()
+    df = pd.DataFrame(report).transpose()
     df.to_excel(os.path.join(files_path, "report.xlsx"))
     df = df.sort_values("f1-score")
     df.to_excel(os.path.join(files_path, "sorted.xlsx"))

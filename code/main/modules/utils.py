@@ -8,9 +8,6 @@ import datetime
 import modules.config as cn
 import numpy as np
 import tensorflow_model_optimization as tfmot
-import tempfile
-import seaborn as sns
-import bokeh
 import numpy as np
 import matplotlib.pyplot as plt
 import datetime
@@ -35,7 +32,7 @@ def define_logger(log_file):
     log.addHandler(fh)
 
 
-def loss_accuracy_plots(hist, log_dir, params):
+def loss_accuracy_plots(hist, log_dir):
 
     font = {"family": "serif", "weight": "normal", "size": 12}
     accuracy = hist.history["accuracy"]
@@ -95,6 +92,7 @@ def display_dataset(data, label, grayscale=True):
 
 
 def callbacks_fn(params, my_dir):
+    """[All the tensorflow callbacks are defined in this method.]"""
 
     callback_list = []
 
@@ -175,35 +173,6 @@ def callbacks_fn(params, my_dir):
     return callback_list, log_dir
 
 
-def test_accuracy(
-    model,
-    test_set=None,
-    test_labels=None,
-    batch=None,
-    verbose=1,
-    tf_dataset=None,
-    is_tfdataset=False,
-):
-    """[This method gives test_accuracy as on output]
-
-    Args:
-        model ([keras.Model]): [Keras model]
-        test_set ([type], optional): [test dataset]. Defaults to None.
-        test_labels ([type], optional): [test labels]. Defaults to None.
-        batch ([type], optional): [description]. Defaults to None.
-        verbose (int, optional): [verbose access]. Defaults to 1.
-        tf_dataset ([type], optional): [TFDS dataset]. Defaults to None.
-        is_tfdataset (bool, optional): [Yes if TF data pipeline is used]. Defaults to False.
-    """
-    if is_tfdataset:
-        loss, accuracy = model.evaluate(tf_dataset, verbose=verbose, batch_size=batch)
-    else:
-        loss, accuracy = model.evaluate(
-            test_set, test_labels, verbose=verbose, batch_size=batch
-        )
-    tf.compat.v1.logging.info(f"Test loss: {loss}, Test Accuracy: {accuracy}")
-
-
 def pruning_plots(
     rows,
     cols,
@@ -217,6 +186,7 @@ def pruning_plots(
     achor_box=(0.7, 1.18),
     save_file="temp.pdf",
 ):
+    """This method generates the plots for pruning at the end of training."""
     plt.close("all")
     font = {"family": "serif", "weight": "normal", "size": 14}
 

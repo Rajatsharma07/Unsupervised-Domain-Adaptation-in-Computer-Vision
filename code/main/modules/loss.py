@@ -2,6 +2,16 @@ import tensorflow as tf
 
 
 def kl_divergence(source_output, target_output, percent_lambda):
+    """[KL Divergence loss function]
+
+    Args:
+        source_output ([tf tensor]): [Source feature map tensor]
+        target_output ([tf tensor]): [Target feature map tensor]
+        percent_lambda (weighting factor, optional): [KL loss weighting factor]. Defaults to 0.5.
+
+    Returns:
+        [tf tensor]: [KL loss per batch]
+    """
     kl_loss = -0.5 * tf.reduce_mean(
         target_output - tf.square(source_output) - tf.exp(target_output) + 1
     )
@@ -10,7 +20,16 @@ def kl_divergence(source_output, target_output, percent_lambda):
 
 
 def CORAL(source_output, target_output, percent_lambda=0.5):
+    """[Deep CORAL loss function]
 
+    Args:
+        source_output ([tf tensor]): [Source feature map tensor]
+        target_output ([tf tensor]): [Target feature map tensor]
+        percent_lambda (weighting factor, optional): [CORAL loss weighting factor]. Defaults to 0.5.
+
+    Returns:
+        [tf tensor]: [CORAL loss per batch]
+    """
     source_batch_size = tf.cast(tf.shape(source_output)[0], tf.float32)
     target_batch_size = tf.cast(tf.shape(target_output)[0], tf.float32)
     d = tf.cast(tf.shape(source_output)[1], tf.float32)
@@ -31,8 +50,17 @@ def CORAL(source_output, target_output, percent_lambda=0.5):
     return loss
 
 
-# calculate LogCoral loss
-def log_coral_loss(source_output, target_output, gamma=1e-3, percent_lambda=0.5):
+def log_coral_loss(source_output, target_output, percent_lambda=0.5):
+    """[Calculate LogCoral loss]
+
+       Args:
+        source_output ([tf tensor]): [Source feature map tensor]
+        target_output ([tf tensor]): [Target feature map tensor]
+        percent_lambda (weighting factor, optional): [Log CORAL loss weighting factor]. Defaults to 0.5.
+
+    Returns:
+        [tf tensor]: [Log CORAL loss per batch]
+    """
     # regularized covariances result in inf or nan
     # First: subtract the mean from the data matrix
     h_src = source_output

@@ -10,6 +10,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
 
 def augment_ds(image, label, prob=0.2):
+    """[This method applied data augmentations to the source dataset.]"""
 
     # Make Images Greyscale
     image = tf.cond(
@@ -132,6 +133,9 @@ def prepare_office_ds(source_directory, target_directory, params):
 
 
 def fetch_data(params):
+    """[This method handles all the data preprocessing steps required to perform
+    domain adaptation on all scenarios.]
+    """
 
     if cn.DATASET_COMBINATION[params["combination"]] == 1:
         source_directory = cn.OFFICE_DS_PATH / "amazon"

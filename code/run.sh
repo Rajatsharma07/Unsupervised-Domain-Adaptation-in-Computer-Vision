@@ -1,9 +1,7 @@
-# #! /usr/bin/env bash
-# ## 1 & 3 Pruning 
 
+# Trigger MBM for A->W Scenario
 
-
-python3 main/main.py --lambda_loss=0.50 --batch_size=16 --architecture="Xception" --resize=299  --epochs=40 --combination="Amazon_to_Webcam" --output_classes=31
+python3 main/main.py --lambda_loss=0.50 --batch_size=16 --architecture="Xception" --resize=299  --epochs=40 --combination="Amazon_to_Webcam" --output_classes=31 --save_model --save_weights --augment
 python3 main/main.py --lambda_loss=0.75 --batch_size=16 --architecture="Xception" --resize=299  --epochs=40 --combination="Amazon_to_Webcam" --output_classes=31 
 python3 main/main.py --lambda_loss=1  --batch_size=16 --architecture="Xception" --resize=299  --epochs=40 --combination="Amazon_to_Webcam" --output_classes=31 
 

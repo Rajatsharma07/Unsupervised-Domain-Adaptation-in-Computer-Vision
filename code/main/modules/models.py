@@ -5,7 +5,6 @@ from modules.loss import CORAL, coral_loss, kl_divergence
 import tensorflow_model_optimization as tfmot
 import numpy as np
 import os
-import tempfile
 
 
 def get_model(
@@ -17,6 +16,20 @@ def get_model(
     lambda_loss=0.75,
     prune_val=0.10,
 ):
+    """[This method generates the model objects for both the techniques - MBM & CDAN]
+
+    Args:
+        input_shape ([tuple]): [default: (299, 299, 3))]
+        prune ([bool]): [pruning applied or not]
+        additional_loss ([domain alignment loss function]): [Deep CORAL or other]
+        technique ([bool]): [choose from MBM or CDAN]
+        num_classes (int, optional): [number of target domain classes]. Defaults to 31.
+        lambda_loss (float, optional): [weightage factor for additional loss]. Defaults to 0.75.
+        prune_val (float, optional): [pruning target sparsity value]. Defaults to 0.10.
+
+    Returns:
+        [keras model]: [tf keras model object]
+    """
 
     inputs = [
         tf.keras.layers.Input(shape=(input_shape)),
