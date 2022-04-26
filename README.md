@@ -1,8 +1,7 @@
 
 
 
-# Master Thesis, University of Passau
-### Topic: Domain-Adaptation
+# Topic: Domain-Adaptation
 - In this thesis, the development of a discrepancy based domain adaptation models named MBM (Modified Baseline Network - an extension of Deep CORAL) & CDAN (Custom Domain Adaptive Network) are discussed. The models are trained on popular benchmarked visual recognition domain datasets like Office-31, GTSRB and Synthetic Signs for image classification tasks, and their performances are evaluated compared to other available domain adaptation methods.
 -  The "Magnitude based weight pruning" with *Constant Sparsity* approach is used to perform target feature extractor optimization.
 
