@@ -6,12 +6,12 @@
 -  The "Magnitude based weight pruning" with *Constant Sparsity* approach is used to perform target feature extractor optimization.
 
 ## Description about the code: 
-1.  **[models.py](https://github.com/Rajatsharma07/Master-Thesis/blob/main/code/main/modules/models.py)** module defines the source & target models. **Xception Network & Top layers**
-2.  **[config.py](https://github.com/Rajatsharma07/Master-Thesis/blob/main/code/main/modules/config.py)** module defines various parameters like set paths, domain adaptation scenarios, backbone model selection, etc. 
-3.  **[loss.py](https://github.com/Rajatsharma07/Master-Thesis/blob/main/code/main/modules/loss.py)** defines the domain alignment loss functions. **Deep CORAL loss, KL Divergence, etc.**
-4.  **[preprocessing.py](https://github.com/Rajatsharma07/Master-Thesis/blob/main/code/main/modules/preprocessing.py)** module defines data preprocessing pipeline with various experimental scenarios including Data augmentation methods. 
-5. **[train_test.py](https://github.com/Rajatsharma07/Master-Thesis/blob/main/code/main/modules/train_test.py)** is a helper module which defines training and evaluation methods, including Evaluatiion metrics like Confusion Matrix, etc.
-6. **[utlis.py](https://github.com/Rajatsharma07/Master-Thesis/blob/main/code/main/modules/utils.py)** defines various plotting, helper methods and various logging paths like tensorboard, csv, model checkpoint, etc.
+1.  **[models.py](https://github.com/Rajatsharma07/Master-Thesis/blob/main/code/main/src/models.py)** module defines the source & target models. **Xception Network & Top layers**
+2.  **[config.py](https://github.com/Rajatsharma07/Master-Thesis/blob/main/code/main/src/config.py)** module defines various parameters like set paths, domain adaptation scenarios, backbone model selection, etc. 
+3.  **[loss.py](https://github.com/Rajatsharma07/Master-Thesis/blob/main/code/main/src/loss.py)** defines the domain alignment loss functions. **Deep CORAL loss, KL Divergence, etc.**
+4.  **[preprocessing.py](https://github.com/Rajatsharma07/Master-Thesis/blob/main/code/main/src/preprocessing.py)** module defines data preprocessing pipeline with various experimental scenarios including Data augmentation methods. 
+5. **[train_test.py](https://github.com/Rajatsharma07/Master-Thesis/blob/main/code/main/src/train_test.py)** is a helper module which defines training and evaluation methods, including Evaluatiion metrics like Confusion Matrix, etc.
+6. **[utlis.py](https://github.com/Rajatsharma07/Master-Thesis/blob/main/code/main/src/utils.py)** defines various plotting, helper methods and various logging paths like tensorboard, csv, model checkpoint, etc.
 7. **[main.py](https://github.com/Rajatsharma07/Master-Thesis/blob/main/code/main/main.py)** is the runnable script which defines various command line arguments of the experiment. **In progress mode = "eval", script is running for mode="train_test"**
 8. **[requirements.txt](https://github.com/Rajatsharma07/Master-Thesis/blob/main/code/requirements.txt)** defines the libraries dependency of the experiments. 
 9. Use shell script  **[run.sh](https://github.com/Rajatsharma07/Master-Thesis/blob/main/code/run.sh)** to run multiple experiments.

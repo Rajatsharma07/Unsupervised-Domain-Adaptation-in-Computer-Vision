@@ -1,13 +1,12 @@
 import tensorflow as tf
 import os
 import argparse
-from modules.train_test import train_test, evaluate
-import numpy as np
+from src.train_test import train_test, evaluate
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
 # Below command selects the the particular GPU for training
-os.environ["CUDA_VISIBLE_DEVICES"] = "7"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 physical_devices = tf.config.list_physical_devices("GPU")
 for device in physical_devices:

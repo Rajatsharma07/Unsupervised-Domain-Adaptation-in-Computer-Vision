@@ -1,7 +1,7 @@
 import tensorflow as tf
 from tensorflow.keras import models, layers
-import modules.config as cn
-from modules.loss import CORAL, coral_loss, kl_divergence
+import src.config as cn
+from src.loss import CORAL, kl_divergence
 import tensorflow_model_optimization as tfmot
 import numpy as np
 import os

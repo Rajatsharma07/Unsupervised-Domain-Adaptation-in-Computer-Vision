@@ -1,6 +1,6 @@
 import tensorflow as tf
 from pathlib import Path
-from modules.loss import CORAL, coral_loss
+from src.loss import CORAL, log_coral_loss
 
 initializer = tf.keras.initializers.he_normal()  # Layer initializations
 
@@ -25,4 +25,4 @@ DATASET_COMBINATION = {
 ARCHITECTURE = {"Xception": 1, "Other": 2}
 
 # This dictionary allows to select different domain alignment loss functions.
-LOSS = {"CORAL": CORAL, "Another": coral_loss}
+LOSS = {"CORAL": CORAL, "Another": log_coral_loss}

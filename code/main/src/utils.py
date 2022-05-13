@@ -5,7 +5,7 @@ import logging
 from pathlib import Path
 from tensorflow.keras.callbacks import CSVLogger
 import datetime
-import modules.config as cn
+import src.config as cn
 import numpy as np
 import tensorflow_model_optimization as tfmot
 import numpy as np

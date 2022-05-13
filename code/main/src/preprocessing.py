@@ -1,6 +1,6 @@
 import os
 import tensorflow as tf
-import modules.config as cn
+import src.config as cn
 import math
 import pandas as pd
 import tensorflow_datasets as tfds
